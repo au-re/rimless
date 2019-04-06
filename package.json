@@ -1,0 +1,84 @@
+{
+  "name": "@au-re/anchor",
+  "author": "Aurélien Franky",
+  "version": "0.0.1",
+  "description": "",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "/lib"
+  ],
+  "scripts": {
+    "analyze": "mkdir -p dependency-map && source-map-explorer --html lib/index.js > dependency-map/index.html",
+    "coverage": "npm run test -- --coverage",
+    "start": "start-storybook -p 6060",
+    "commit": "git-cz",
+    "test": "jest --watch",
+    "clean": "rm -rf node_modules && npm i",
+    "lint": "tslint -c tslint.json 'src/**/*.ts'",
+    "prepare": "npm run build",
+    "build": "tsc --build",
+    "build:storybook": "build-storybook -o build/storybook",
+    "deploy": "gh-pages -d build/storybook",
+    "predeploy": "npm run build-storybook",
+    "storybook": "start-storybook -p 6006",
+    "build-storybook": "build-storybook"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.4.3",
+    "@storybook/addon-actions": "^5.0.6",
+    "@storybook/addon-links": "^5.0.6",
+    "@storybook/addon-options": "^5.0.6",
+    "@storybook/addons": "^5.0.6",
+    "@storybook/react": "^5.0.6",
+    "@storybook/theming": "^5.0.6",
+    "@types/jest": "^24.0.11",
+    "@types/lodash.isequal": "^4.5.5",
+    "@types/storybook-readme": "^5.0.0",
+    "awesome-typescript-loader": "^5.2.1",
+    "babel-loader": "^8.0.5",
+    "commitizen": "^3.0.7",
+    "cz-emoji": "^1.1.2",
+    "faker": "^4.1.0",
+    "file-loader": "^3.0.1",
+    "gh-pages": "^2.0.1",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^24.6.0",
+    "react": "^16.8.6",
+    "react-docgen-typescript-webpack-plugin": "^1.1.0",
+    "react-dom": "^16.8.6",
+    "source-map-explorer": "^1.8.0",
+    "source-map-loader": "^0.2.4",
+    "storybook-readme": "^5.0.1",
+    "ts-jest": "^24.0.1",
+    "tslint": "^5.12.1",
+    "tslint-config-airbnb": "^5.11.1",
+    "tslint-react": "^3.6.0",
+    "typescript": "^3.3.3",
+    "webpack-cli": "^3.2.3"
+  },
+  "config": {
+    "cz-emoji": {},
+    "commitizen": {
+      "path": "cz-emoji"
+    }
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "jsdom",
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx,ts,tsx}",
+      "!src/**/*.stories.{js,jsx,ts,tsx}",
+      "!src/**/*.d.ts"
+    ],
+    "moduleNameMapper": {
+      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/config/jext/fileMock.js",
+      "\\.(css|sass|scss)$": "<rootDir>/config/jest/cssMock.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/au-re/mitred.git"
+  },
+  "dependencies": {}
+}
