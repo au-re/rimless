@@ -1,5 +1,6 @@
-import { IConnections, IEvent, IHandshakeRequestPayload, ISchema, events } from "./types";
-import { generateID, getOriginFromURL, registerLocalAPI, registerRemoteAPI } from "./helpers";
+import { IConnections, IEvent, IHandshakeRequestPayload, ISchema, actions, events } from "./types";
+import { generateID, getOriginFromURL } from "./helpers";
+import { registerLocalAPI, registerRemoteAPI } from "./rpc";
 
 const connections: IConnections = {};
 
@@ -7,7 +8,8 @@ function isValidTarget(iframe: HTMLIFrameElement, event: any) {
   const childURL = iframe.getAttribute("src");
   const childOrigin = getOriginFromURL(childURL);
   const hasProperOrigin = event.origin === childOrigin;
-  const hasProperSource = event.source === iframe;
+  const hasProperSource = event.source === iframe.contentWindow;
+
   return hasProperOrigin && hasProperSource;
 }
 
@@ -28,16 +30,17 @@ function connect(iframe: HTMLIFrameElement, schema: ISchema, options?: any) {
 
     // on handshake request
     function handleHandshake(event: any) {
+
       if (!isValidTarget(iframe, event)) return;
-      if (event.data.action !== events.HANDSHAKE_REQUEST) return;
+      if (event.data.action !== actions.HANDSHAKE_REQUEST) return;
 
       // register local and remote APIs
-      const cancelListener = registerLocalAPI(schema, connectionID);
+      registerLocalAPI(schema, connectionID);
       const connection = registerRemoteAPI(event.data.schema, connectionID, event.source);
       connections[connectionID] = connection;
 
       // confirm the connection
-      event.source.postMessage({ action: events.HANDSHAKE_REPLY, schema, connectionID }, event.origin);
+      event.source.postMessage({ action: actions.HANDSHAKE_REPLY, schema, connectionID }, event.origin);
       return resolve(connection);
     }
 
