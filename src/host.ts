@@ -1,6 +1,8 @@
-import { IConnections, IEvent, IHandshakeRequestPayload, ISchema, actions, events } from "./types";
-import { generateID, getOriginFromURL } from "./helpers";
+import short from "short-uuid";
+
+import { getOriginFromURL } from "./helpers";
 import { registerLocalAPI, registerRemoteAPI } from "./rpc";
+import { actions, events, IConnections, ISchema } from "./types";
 
 const connections: IConnections = {};
 
@@ -26,7 +28,7 @@ function connect(iframe: HTMLIFrameElement, schema: ISchema, options?: any) {
   if (!iframe) throw new Error("a target iframe is required");
 
   return new Promise((resolve, reject) => {
-    const connectionID = generateID();
+    const connectionID = short.generate();
 
     // on handshake request
     function handleHandshake(event: any) {
@@ -50,5 +52,5 @@ function connect(iframe: HTMLIFrameElement, schema: ISchema, options?: any) {
 }
 
 export default ({
-  connect
+  connect,
 });

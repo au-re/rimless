@@ -15,40 +15,40 @@ export interface ISchema {
 }
 
 export interface IConnections {
-  [connectionID: string]: ISchema
+  [connectionID: string]: ISchema;
 }
 
 export interface IEvent extends EventListener {
-  source?: Window,
-  origin?: string,
-  data?: IHandshakeRequestPayload | IHandshakeConfirmationPayload | IRPCRequestPayload | IRPCResolvePayload,
+  source?: Window;
+  origin?: string;
+  data?: IHandshakeRequestPayload | IHandshakeConfirmationPayload | IRPCRequestPayload | IRPCResolvePayload;
 }
 
 export interface IHandshakeRequestPayload {
-  action: actions.HANDSHAKE_REQUEST,
-  connectionID?: string,
+  action: actions.HANDSHAKE_REQUEST;
+  connectionID?: string;
   schema: ISchema;
 }
 
-export interface IHandshakeConfirmationPayload {
-  action: actions.HANDSHAKE_REPLY,
-  connectionID: string,
+interface IHandshakeConfirmationPayload {
+  action: actions.HANDSHAKE_REPLY;
+  connectionID: string;
   schema: ISchema;
 }
 
 export interface IRPCRequestPayload {
-  action: actions.RPC_REQUEST,
-  args: any[],
-  callID: string,
-  callName: string,
-  connectionID?: string,
+  action: actions.RPC_REQUEST;
+  args: any[];
+  callID: string;
+  callName: string;
+  connectionID?: string;
 }
 
 export interface IRPCResolvePayload {
-  action: actions.RPC_RESOLVE | actions.RPC_REJECT,
-  result?: any,
-  error?: Error,
-  callID: string,
-  callName: string,
-  connectionID: string,
+  action: actions.RPC_RESOLVE | actions.RPC_REJECT;
+  result?: any;
+  error?: Error;
+  callID: string;
+  callName: string;
+  connectionID: string;
 }

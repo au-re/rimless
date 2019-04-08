@@ -4,16 +4,26 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Page Title</title>
+  <title>guest page</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
 <body>
   <script>
+    console.log("CHILD ALIVE");
+
     window.addEventListener("message", (event) => {
-      console.log(event.source);
-      console.log(event.origin);
-      console.log(event.data);
+      console.log("CHILD RECEIVE SOURCE", event.source);
+      console.log("CHILD RECEIVE ORIGIN", event.origin);
+      console.log("CHILD RECEIVE DATA", event.data);
+    });
+
+    window.parent.postMessage({
+      action: "ANCHOR/HANDSHAKE_REQUEST",
+      schema: {
+        "foo": "bar",
+        "run": (x) => `Hello host! ${x}`,
+      },
     });
   </script>
 </body>

@@ -1,39 +1,39 @@
-import { Button, Welcome } from '@storybook/react/demo';
-import { child, parent } from "../index";
-
 import React from 'react';
-import { action } from '@storybook/addon-actions';
-import { linkTo } from '@storybook/addon-links';
+import { host } from "../index";
 import { storiesOf } from '@storybook/react';
 
 const srcDoc = `
-  <!DOCTYPE html>
-  <html>
+<!DOCTYPE html>
+<html>
 
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Page Title</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-  </head>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>guest page</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
 
-  <body>
-    <script>
-      console.log("CHILD ALIVE");
-      window.addEventListener("message", (event) => {
-        console.log("MESSAGE", event.source);
-        console.log("MESSAGE", event.origin);
-        console.log("MESSAGE", event.data);
-      });
-      window.parent.postMessage({ schema: {
-        childProp: "test",
-        run: (x) => \`some string with \${x}\`
+<body>
+  <script>
+    console.log("CHILD ALIVE");
 
-      }, action: "ANCHOR/HANDSHAKE_REQUEST" });
-    </script>
-  </body>
+    window.addEventListener("message", (event) => {
+      console.log("CHILD RECEIVE SOURCE", event.source);
+      console.log("CHILD RECEIVE ORIGIN", event.origin);
+      console.log("CHILD RECEIVE DATA", event.data);
+    });
 
-  </html>
+    window.parent.postMessage({
+      action: "ANCHOR/HANDSHAKE_REQUEST",
+      schema: {
+        "foo": "bar",
+        "run": (x) => \`Hello host! \${x}\`,
+      },
+    });
+  </script>
+</body>
+
+</html>
 `;
 
 function Demo() {
@@ -42,9 +42,7 @@ function Demo() {
 
   React.useEffect(() => {
     async function run() {
-      const connection = await parent
-        .connect(iframe.current, { test: "hello world" });
-      console.log("PARENT CONNECTION ESTABLISHED", connection);
+      const connection = await host.connect(iframe.current, { test: "hello world" });
       setChildAPI(connection);
     }
     run();

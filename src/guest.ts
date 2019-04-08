@@ -1,5 +1,5 @@
-import { IEvent, ISchema, actions, events } from "./types";
 import { registerLocalAPI, registerRemoteAPI } from "./rpc";
+import { actions, events, ISchema } from "./types";
 
 function connect(schema: ISchema, options?: any) {
   return new Promise((resolve, reject) => {
@@ -25,5 +25,5 @@ function connect(schema: ISchema, options?: any) {
 }
 
 export default ({
-  connect
+  connect,
 });

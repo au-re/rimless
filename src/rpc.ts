@@ -1,11 +1,14 @@
-import { IRPCRequestPayload, IRPCResolvePayload, ISchema, actions, events } from "./types";
-import { generateID, isTrustedRemote } from "./helpers";
+import short from "short-uuid";
+
+import { isTrustedRemote } from "./helpers";
+import { actions, events, IRPCRequestPayload, IRPCResolvePayload, ISchema } from "./types";
 
 /**
  * for each function in the schema subscribe to an event that the remote can call
  * listen for calls from the remote. When called execute the function and emit the results.
  *
  * @param schema
+ * @param _connectionID
  */
 export function registerLocalAPI(schema: ISchema, _connectionID: string): any[] {
   const listeners: any[] = [];
@@ -29,18 +32,18 @@ export function registerLocalAPI(schema: ISchema, _connectionID: string): any[] 
           const result = await schema[key](...args);
           event.source.postMessage({
             action: actions.RPC_RESOLVE,
-            result,
             callID,
             callName,
-            connectionID
+            connectionID,
+            result,
           });
         } catch (error) {
           event.source.postMessage({
             action: actions.RPC_REJECT,
-            error,
             callID,
             callName,
-            connectionID
+            connectionID,
+            error,
           });
         }
       }
@@ -87,7 +90,7 @@ export function registerRemoteAPI(schema: ISchema, _connectionID: string, remote
 export function createRPC(_callName: string, _connectionID: string, remote: any) {
   return (...args: any) => {
     return new Promise((resolve, reject) => {
-      const callID = generateID();
+      const callID = short.generate();
 
       // on RPC response
       function handleResponse(event: any) {
@@ -108,14 +111,14 @@ export function createRPC(_callName: string, _connectionID: string, remote: any)
       // send the RPC request with arguments
       const payload = {
         action: actions.RPC_REQUEST,
-        connectionID: _connectionID,
+        args,
         callID,
         callName: _callName,
-        args
+        connectionID: _connectionID,
       };
 
       window.addEventListener(events.MESSAGE, handleResponse);
       remote.postMessage(payload, remote.origin);
     });
-  }
+  };
 }

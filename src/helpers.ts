@@ -1,21 +1,41 @@
-import { IRPCRequestPayload, IRPCResolvePayload, ISchema, events } from "./types";
+import { ISchema } from "./types";
 
 export const CONNECTION_TIMEOUT = 1000;
 
+// check if the remote is trusted
 export function isTrustedRemote(event: any) {
+  // TODO: implement
   return true;
 }
 
-export function generateID(): string {
-  return "1";
+export function getDeepValue(obj: any, path: string) {
+  for (const node of path.split(".")) {
+    obj = obj[node];
+  }
+  return obj;
+}
+
+// we cannot send functions through postMessage
+// remove function definition from the schema and replace them with type
+export function mapDeep(obj: any) {
+  for (const prop in obj) {
+    if (obj[prop] === Object(obj[prop])) mapDeep(obj[prop]);
+    if (typeof obj[prop] === "function") {
+      obj[`@RPC_${prop}`] = true;
+      delete obj[prop];
+    }
+  }
+  return obj;
 }
 
 const urlRegex = /^(https?:|file:)?\/\/([^/:]+)?(:(\d+))?/;
-const ports: any = {
-  "http:": "80",
-  "https:": "443"
-};
+const ports: any = { "http:": "80", "https:": "443" };
 
+/**
+ * convert the url into an origin (remove paths)
+ *
+ * @param url
+ */
 export function getOriginFromURL(url: string | null) {
 
   const location = document.location;
@@ -48,6 +68,6 @@ export function getOriginFromURL(url: string | null) {
 
   // If the port is the default for the protocol, we don't want to add it to the origin string
   // or it won't match the message's event.origin.
-  const portSuffix = port && port !== ports[protocol] ? `:${port}` : '';
+  const portSuffix = port && port !== ports[protocol] ? `:${port}` : "";
   return `${protocol}//${hostname}${portSuffix}`;
-};
+}
