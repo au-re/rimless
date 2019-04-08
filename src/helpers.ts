@@ -1,4 +1,4 @@
-import { IRPCRequestPayload, IRPCResolvePayload, ISchema, events } from "./types";
+import { events, IRPCRequestPayload, IRPCResolvePayload, ISchema } from "./types";
 
 export const CONNECTION_TIMEOUT = 1000;
 
@@ -36,7 +36,7 @@ export function registerLocalAPI(schema: ISchema, _connectionID: string): any[] 
             result,
             callID,
             callName,
-            connectionID
+            connectionID,
           });
         } catch (error) {
           event.source.postMessage({
@@ -44,7 +44,7 @@ export function registerLocalAPI(schema: ISchema, _connectionID: string): any[] 
             error,
             callID,
             callName,
-            connectionID
+            connectionID,
           });
         }
       }
@@ -99,13 +99,13 @@ export function createRPC(_callName: string, _connectionID: string, remote: any)
         connectionID: _connectionID,
         callID,
         callName: _callName,
-        args
+        args,
       };
 
       window.addEventListener(events.MESSAGE, handleResponse);
       remote.postMessage(payload, remote.origin);
     });
-  }
+  };
 }
 
 export function generateID(): string {
@@ -115,7 +115,7 @@ export function generateID(): string {
 const urlRegex = /^(https?:|file:)?\/\/([^/:]+)?(:(\d+))?/;
 const ports: any = {
   "http:": "80",
-  "https:": "443"
+  "https:": "443",
 };
 
 export function getOriginFromURL(url: string | null) {
@@ -150,6 +150,6 @@ export function getOriginFromURL(url: string | null) {
 
   // If the port is the default for the protocol, we don't want to add it to the origin string
   // or it won't match the message's event.origin.
-  const portSuffix = port && port !== ports[protocol] ? `:${port}` : '';
+  const portSuffix = port && port !== ports[protocol] ? `:${port}` : "";
   return `${protocol}//${hostname}${portSuffix}`;
-};
+}

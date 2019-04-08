@@ -1,5 +1,5 @@
-import { IConnections, IEvent, IHandshakeRequestPayload, ISchema, events } from "./types";
 import { generateID, getOriginFromURL, registerLocalAPI, registerRemoteAPI } from "./helpers";
+import { events, IConnections, ISchema } from "./types";
 
 const connections: IConnections = {};
 
@@ -47,5 +47,5 @@ function connect(iframe: HTMLIFrameElement, schema: ISchema, options?: any) {
 }
 
 export default ({
-  connect
+  connect,
 });

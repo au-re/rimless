@@ -7,52 +7,45 @@ export enum events {
   MESSAGE = "message",
 }
 
-// export enum connectionStatus {
-//   PENDING = "PENDING",
-//   CONNECTED = "CONNECTED",
-//   RECONNECTING = "RECONNECTING",
-//   CLOSED = "CLOSED",
-// }
-
 export interface ISchema {
   [prop: string]: any;
 }
 
 export interface IConnections {
-  [connectionID: string]: ISchema
+  [connectionID: string]: ISchema;
 }
 
 export interface IEvent extends EventListener {
-  source?: Window,
-  origin?: string,
-  data?: IHandshakeRequestPayload | IHandshakeConfirmationPayload | IRPCRequestPayload | IRPCResolvePayload | IRPCRejectPayload,
+  source?: Window;
+  origin?: string;
+  data?: IHandshakeRequestPayload | IHandshakeConfirmationPayload | IRPCRequestPayload | IRPCResolvePayload;
 }
 
 export interface IHandshakeRequestPayload {
-  action: events.HANDSHAKE_REQUEST,
-  connectionID?: string,
+  action: events.HANDSHAKE_REQUEST;
+  connectionID?: string;
   schema: ISchema;
 }
 
 interface IHandshakeConfirmationPayload {
-  action: events.HANDSHAKE_REPLY,
-  connectionID: string,
+  action: events.HANDSHAKE_REPLY;
+  connectionID: string;
   schema: ISchema;
 }
 
 export interface IRPCRequestPayload {
-  action: events.RPC_REQUEST,
-  args: any[],
-  callID: string,
-  callName: string,
-  connectionID?: string,
+  action: events.RPC_REQUEST;
+  args: any[];
+  callID: string;
+  callName: string;
+  connectionID?: string;
 }
 
 export interface IRPCResolvePayload {
-  action: events.RPC_RESOLVE | events.RPC_REJECT,
-  result?: any,
-  error?: Error,
-  callID: string,
-  callName: string,
-  connectionID: string,
+  action: events.RPC_RESOLVE | events.RPC_REJECT;
+  result?: any;
+  error?: Error;
+  callID: string;
+  callName: string;
+  connectionID: string;
 }

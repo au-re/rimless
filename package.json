@@ -2,7 +2,7 @@
   "name": "@au-re/anchor",
   "author": "Aurélien Franky",
   "version": "0.0.1",
-  "description": "",
+  "description": "iframe communication made easy with a promise-based API wrapping `postMessage`",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [

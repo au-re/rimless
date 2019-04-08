@@ -1,4 +1,4 @@
-import { IConnection, IEvent, ISchema } from "./types";
+import { IEvent, ISchema } from "./types";
 
 // const connection: IConnection = {};
 
