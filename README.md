@@ -1,10 +1,47 @@
+[npm-url]: https://www.npmjs.com/package/@au-re/anchor
+[npm-image]: https://badge.fury.io/js/postmate.svg
+[commitizen-url]: http://commitizen.github.io/cz-cli/
+[commitizen-image]: https://img.shields.io/badge/commitizen-friendly-brightgreen.svg
+
 # anchor
 
 > iframe communication made easy with a promise-based API wrapping `postMessage`
 
-[![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
+[![npm][npm-image]][npm-url]
+[![Commitizen friendly][commitizen-image]][commitizen-url]
 
-Create a schema defining the API your iframe will present to its host.
+Create a schema defining the API your iframe will present to its host and vice versa. Then simply connect the two and `anchor` will take care of the rest.
+
+**In the host website**
+
+```js
+import { host }  from "@au-re/anchor";
+
+const iframe = document.getElementById("myIframe");
+
+// returns the guest object with the API defined by the guest
+const guest = await host.connect(iframe, {
+  sayHiToGuest: () => "hello guest!";
+});
+
+// with the guest object we can now run actions on the iframe
+const res = await guest.sayHiToHost();
+console.log(res); // "hello host!"
+```
+**In the guest website**
+
+```js
+import { guest }  from "@au-re/anchor";
+
+// returns the host object with the API defined by the host
+const host = await guest.connect({
+  sayHiToHost: () => "hello host!";
+});
+
+// with the host object we can now run actions on the host
+const res = await host.sayHiToGuest();
+console.log(res); // "hello guest!"
+```
 
 ## Alternatives
 
@@ -34,27 +71,11 @@ Loading from a CDN
 
 ## Usage
 
-In the parent component:
+TODO: write me
 
-```js
-import { host }  from "@au-re/anchor";
+## API
 
-const guest = await host.connect(iframe, schema, options);
-
-// we can now execute actions on the iframe
-const res = await guest.someAction();
-```
-
-In the child component:
-
-```js
-import { guest }  from "@au-re/anchor";
-
-const host = await guest.connect(schema, options);
-
-// we can now execute actions on the host
-const res = await host.someAction();
-```
+TODO: write me
 
 ## Overview
 
@@ -66,10 +87,6 @@ Now both can make use of the APIs they have shared with each other, e.g.
 3. The guest requests `someAction` on the parent.
 4. After verifying the origin, the parent will execute the function mapped to `someAction` and the value is returned to the guest.
 
-## Scripts
-
-A set of scripts are provided for you to test, build and analyze the project.
-
 ## Contributing
 
 We use the [airbnb style guide](https://github.com/airbnb/javascript) when writing javascript, with
@@ -80,6 +97,10 @@ We use [commitizen](https://github.com/commitizen/cz-cli) and
 [angular's conventional changelog](https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commits)
 to enforce a consistent commit format. When writing commits, make sure you run `npm run commit`
 instead of `git commit`.
+
+### Scripts
+
+A set of scripts are provided for you to test, build and analyze the project.
 
 ## License
 
