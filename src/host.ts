@@ -1,7 +1,7 @@
 import short from "short-uuid";
 
-import { getOriginFromURL } from "./helpers";
-import { registerLocalAPI, registerRemoteAPI } from "./rpc";
+import { extractMethods, getOriginFromURL } from "./helpers";
+import { registerLocalMethods, registerRemoteMethods } from "./rpc";
 import { actions, events, IConnections, ISchema } from "./types";
 
 const connections: IConnections = {};
@@ -32,17 +32,35 @@ function connect(iframe: HTMLIFrameElement, schema: ISchema, options?: any) {
 
     // on handshake request
     function handleHandshake(event: any) {
-
       if (!isValidTarget(iframe, event)) return;
       if (event.data.action !== actions.HANDSHAKE_REQUEST) return;
 
-      // register local and remote APIs
-      registerLocalAPI(schema, connectionID);
-      const connection = registerRemoteAPI(event.data.schema, connectionID, event.source);
-      connections[connectionID] = connection;
+      // register local methods
+      const localMethods = extractMethods(schema);
+      const unregisterLocal = registerLocalMethods(schema, localMethods, connectionID);
+
+      // register remote methods
+      const { remote, unregisterRemote } =
+        registerRemoteMethods(event.data.schema, event.data.methods, connectionID, event.source);
 
       // confirm the connection
-      event.source.postMessage({ action: actions.HANDSHAKE_REPLY, schema, connectionID }, event.origin);
+      event.source.postMessage({
+        action: actions.HANDSHAKE_REPLY,
+        connectionID,
+        methods: localMethods,
+        schema: JSON.parse(JSON.stringify(schema)),
+      }, event.origin);
+
+      // close the connection and all listeners when called
+      const close = () => {
+        window.removeEventListener(events.MESSAGE, handleHandshake);
+        unregisterRemote();
+        unregisterLocal();
+      };
+
+      // resolve connection object
+      const connection = { remote, close };
+      connections[connectionID] = connection;
       return resolve(connection);
     }
 

@@ -1,5 +1,3 @@
-import { ISchema } from "./types";
-
 export const CONNECTION_TIMEOUT = 1000;
 
 // check if the remote is trusted
@@ -8,24 +6,22 @@ export function isTrustedRemote(event: any) {
   return true;
 }
 
-export function getDeepValue(obj: any, path: string) {
-  for (const node of path.split(".")) {
-    obj = obj[node];
-  }
-  return obj;
-}
-
 // we cannot send functions through postMessage
-// remove function definition from the schema and replace them with type
-export function mapDeep(obj: any) {
-  for (const prop in obj) {
-    if (obj[prop] === Object(obj[prop])) mapDeep(obj[prop]);
-    if (typeof obj[prop] === "function") {
-      obj[`@RPC_${prop}`] = true;
-      delete obj[prop];
+// extract the path to all functions in the schema
+export function extractMethods(obj: any) {
+  const paths = [];
+  (function parse(obj: any, path = "") {
+    for (const prop in obj) {
+      const propPath = path ? `${path}.${prop}` : prop;
+      if (obj[prop] === Object(obj[prop])) {
+        parse(obj[prop], propPath);
+      }
+      if (typeof obj[prop] === "function") {
+        paths.push(propPath);
+      }
     }
-  }
-  return obj;
+  })(obj);
+  return paths;
 }
 
 const urlRegex = /^(https?:|file:)?\/\/([^/:]+)?(:(\d+))?/;

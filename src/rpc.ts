@@ -1,82 +1,74 @@
+import get from "lodash.get";
+import set from "lodash.set";
 import short from "short-uuid";
 
 import { isTrustedRemote } from "./helpers";
 import { actions, events, IRPCRequestPayload, IRPCResolvePayload, ISchema } from "./types";
 
 /**
- * for each function in the schema subscribe to an event that the remote can call
+ * for each function in the schema subscribe to an event that the remote can call and
  * listen for calls from the remote. When called execute the function and emit the results.
  *
- * @param schema
+ * @param methods an array of method ids from the local schema
  * @param _connectionID
+ * @return a function to cancel all subscriptions
  */
-export function registerLocalAPI(schema: ISchema, _connectionID: string): any[] {
+export function registerLocalMethods(schema: ISchema, methods: any[], _connectionID: string): any {
   const listeners: any[] = [];
-  Object.keys(schema)
-    .filter((key) => typeof schema[key] === "function")
-    .forEach((key) => {
+  methods.forEach((methodName) => {
 
-      // handle a remote calling a function on the local API
-      async function handleCall(event: any) {
-        const { callID, connectionID, callName, args } = event.data as IRPCRequestPayload;
+    // handle a remote calling a local method
+    async function handleCall(event: any) {
+      const { callID, connectionID, callName, args } = event.data as IRPCRequestPayload;
 
-        if (!isTrustedRemote(event)) return;
-        if (!callID || !callName) return;
-        if (callName !== key) return;
-        if (connectionID !== _connectionID) return;
+      if (!isTrustedRemote(event)) return;
+      if (!callID || !callName) return;
+      if (callName !== methodName) return;
+      if (connectionID !== _connectionID) return;
 
-        // TODO: remove listener here?
-
-        // run function and return the results to the remote
-        try {
-          const result = await schema[key](...args);
-          event.source.postMessage({
-            action: actions.RPC_RESOLVE,
-            callID,
-            callName,
-            connectionID,
-            result,
-          });
-        } catch (error) {
-          event.source.postMessage({
-            action: actions.RPC_REJECT,
-            callID,
-            callName,
-            connectionID,
-            error,
-          });
-        }
+      // run function and return the results to the remote
+      try {
+        const result = await get(schema, methodName)(...args);
+        event.source.postMessage({
+          action: actions.RPC_RESOLVE,
+          callID,
+          callName,
+          connectionID,
+          result,
+        });
+      } catch (error) {
+        event.source.postMessage({
+          action: actions.RPC_REJECT,
+          callID,
+          callName,
+          connectionID,
+          error,
+        });
       }
+    }
 
-      // subscribe to the call event
-      window.addEventListener(events.MESSAGE, handleCall);
-      listeners.push(() => window.removeEventListener(events.MESSAGE, handleCall));
-    });
+    // subscribe to the call event
+    window.addEventListener(events.MESSAGE, handleCall);
+    listeners.push(() => window.removeEventListener(events.MESSAGE, handleCall));
+  });
 
-  return listeners;
+  return () => listeners.forEach((unregister) => unregister());
 }
 
 /**
- * create a connection object from the remote schema. Functions in that object will emit an
+ * create a remote object from the remote schema and methods. Functions in that object will emit an
  * event to the remote to execute an RPC.
  *
  * @param schema
  * @param _connectionID
  * @param remote
  */
-export function registerRemoteAPI(schema: ISchema, _connectionID: string, remote: any) {
-  const connection: ISchema = {};
-  Object.keys(schema)
-    .forEach((key) => {
-      if (typeof schema[key] !== "function") {
-        connection[key] = schema[key];
-        return;
-      }
-      const procedure = createRPC(key, _connectionID, remote);
-      connection[key] = procedure;
-    });
-
-  return connection;
+export function registerRemoteMethods(schema: ISchema, methods: any[], _connectionID: string, remote: any) {
+  const res = Object.assign({}, schema);
+  methods.forEach((methodName) => {
+    set(res, methodName, createRPC(methodName, _connectionID, remote));
+  });
+  return res;
 }
 
 /**

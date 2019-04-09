@@ -27,12 +27,14 @@ export interface IEvent extends EventListener {
 export interface IHandshakeRequestPayload {
   action: actions.HANDSHAKE_REQUEST;
   connectionID?: string;
+  methods: any[];
   schema: ISchema;
 }
 
-interface IHandshakeConfirmationPayload {
+export interface IHandshakeConfirmationPayload {
   action: actions.HANDSHAKE_REPLY;
   connectionID: string;
+  methods: any[];
   schema: ISchema;
 }
 

@@ -1,31 +1,40 @@
-import { getDeepValue, isTrustedRemote, mapDeep } from "../helpers";
+import { extractMethods, isTrustedRemote } from "../helpers";
 
-describe("deepValue", () => {
-  it("returns undefined for a value not found", () => {
-    expect(getDeepValue({}, "foo")).toBe(undefined);
-    expect(getDeepValue({ bar: { baz: "" }, faz: "" }, "foo")).toBe(undefined);
+describe("extract functions", () => {
+  const noFunctions = {
+    foo: {
+      bar: {
+        baz: "value",
+      },
+      foo: "",
+    },
+  };
+
+  const shallowFunctions = {
+    bar: { baz: "value" },
+    baz: () => { },
+    foo: () => { },
+  };
+
+  const nestedFunctions = {
+    foo: {
+      bar: {
+        baz: () => { },
+      },
+      foo: () => { },
+    },
+  };
+
+  it("returns an empty array if no function is present", () => {
+    expect(extractMethods(noFunctions)).toEqual([]);
   });
 
-  it("returns the correct value for a matching path", () => {
-    const value = "test";
-    expect(getDeepValue({ foo: value }, "foo")).toBe("test");
-    expect(getDeepValue({ foo: { bar: { baz: value }, foo: "" } }, "foo.bar.baz")).toBe("test");
-  });
-});
-
-describe("mapDeep", () => {
-
-  it("leaves the object alone if no item is a function", () => {
-    const value = { foo: { bar: { baz: "value" }, foo: "" } };
-    expect(mapDeep(value)).toEqual(value);
+  it("correctly returns the path for shallow functions", () => {
+    expect(extractMethods(shallowFunctions).sort()).toEqual(["foo", "baz"].sort());
   });
 
-  it("correctly transforms all functions into type Function", () => {
-    expect(mapDeep({ foo: () => { } })).toEqual({ "@RPC_foo": true });
-  });
-
-  it("result can be safely stringyfied and parsed back", () => {
-    expect(JSON.parse(JSON.stringify(mapDeep({ foo: () => { } })))).toEqual({ "@RPC_foo": true });
+  it("correctly returns the path for nested functions", () => {
+    expect(extractMethods(nestedFunctions).sort()).toEqual(["foo.bar.baz", "foo.foo"].sort());
   });
 });
 
