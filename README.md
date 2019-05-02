@@ -21,7 +21,7 @@ const iframe = document.getElementById("myIframe");
 
 // returns the guest object with the API defined by the guest
 const connection = await host.connect(iframe, {
-  sayHiToGuest: () => "hello guest!";
+  sayHiToGuest: () => "hello guest!",
 });
 
 // with the guest object we can now run actions on the iframe
@@ -35,7 +35,7 @@ import { guest }  from "rimless";
 
 // returns the host object with the API defined by the host
 const connection = await guest.connect({
-  sayHiToHost: () => "hello host!";
+  sayHiToHost: () => "hello host!",
 });
 
 // with the host object we can now run actions on the host
@@ -66,7 +66,7 @@ $ npm i -S rimless
 Loading from a CDN
 
 ```html
-<script src="unpkg.com/rimless/rimless.min.js"></script>
+<script src="https://unpkg.com/rimless/lib/rimless.min.js"></script>
 ```
 
 ## Overview

@@ -1,4 +1,4 @@
-import child from "./guest";
+import guest from "./guest";
 import host from "./host";
 
-export { host, child };
+export { host, guest };
