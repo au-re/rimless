@@ -66,7 +66,7 @@ $ npm i -S rimless
 Loading from a CDN
 
 ```html
-<script src="unpkg.com/rimless/umd/rimless.production.min.js"></script>
+<script src="unpkg.com/rimless/rimless.min.js"></script>
 ```
 
 ## Overview
