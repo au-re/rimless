@@ -19,8 +19,9 @@ export function registerLocalMethods(schema: ISchema, methods: any[], _connectio
 
     // handle a remote calling a local method
     async function handleCall(event: any) {
-      const { callID, connectionID, callName, args } = event.data as IRPCRequestPayload;
+      const { action, callID, connectionID, callName, args } = event.data as IRPCRequestPayload;
 
+      if (action !== actions.RPC_REQUEST) return;
       if (!isTrustedRemote(event)) return;
       if (!callID || !callName) return;
       if (callName !== methodName) return;
@@ -70,13 +71,7 @@ export function registerRemoteMethods(schema: ISchema, methods: any[], _connecti
     const rpc = createRPC(methodName, _connectionID, target, listeners);
     set(remote, methodName, rpc);
   });
-  return {
-    remote,
-    unregisterRemote: () => {
-      console.log("LISTENERS", listeners);
-      listeners.forEach((unregister) => unregister());
-    },
-  };
+  return { remote, unregisterRemote: () => listeners.forEach((unregister) => unregister()) };
 }
 
 /**

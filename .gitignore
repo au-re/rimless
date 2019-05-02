@@ -12,6 +12,7 @@ dependency-map
 # production
 build
 lib
+storybook-static
 
 # misc
 .DS_Store
