@@ -63,12 +63,20 @@ export function registerLocalMethods(schema: ISchema, methods: any[], _connectio
  * @param _connectionID
  * @param remote
  */
-export function registerRemoteMethods(schema: ISchema, methods: any[], _connectionID: string, remote: any) {
-  const res = Object.assign({}, schema);
+export function registerRemoteMethods(schema: ISchema, methods: any[], _connectionID: string, target: any) {
+  const remote = Object.assign({}, schema);
+  const listeners: Array<() => void> = [];
   methods.forEach((methodName) => {
-    set(res, methodName, createRPC(methodName, _connectionID, remote));
+    const rpc = createRPC(methodName, _connectionID, target, listeners);
+    set(remote, methodName, rpc);
   });
-  return res;
+  return {
+    remote,
+    unregisterRemote: () => {
+      console.log("LISTENERS", listeners);
+      listeners.forEach((unregister) => unregister());
+    },
+  };
 }
 
 /**
@@ -79,7 +87,7 @@ export function registerRemoteMethods(schema: ISchema, methods: any[], _connecti
  * @param _connectionID
  * @param remote
  */
-export function createRPC(_callName: string, _connectionID: string, remote: any) {
+export function createRPC(_callName: string, _connectionID: string, target: any, listeners: Array<() => void>) {
   return (...args: any) => {
     return new Promise((resolve, reject) => {
       const callID = short.generate();
@@ -92,8 +100,6 @@ export function createRPC(_callName: string, _connectionID: string, remote: any)
         if (!callID || !callName) return;
         if (callName !== _callName) return;
         if (connectionID !== _connectionID) return;
-
-        // TODO: remove listener here?
 
         // resolve the response
         if (action === actions.RPC_RESOLVE) return resolve(result);
@@ -110,7 +116,8 @@ export function createRPC(_callName: string, _connectionID: string, remote: any)
       };
 
       window.addEventListener(events.MESSAGE, handleResponse);
-      remote.postMessage(payload, remote.origin);
+      listeners.push(() => window.removeEventListener(events.MESSAGE, handleResponse));
+      target.postMessage(payload, target.origin);
     });
   };
 }

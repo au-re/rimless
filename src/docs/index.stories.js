@@ -12,22 +12,29 @@ const srcDoc = `
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>guest page</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://unpkg.com/rimless/lib/rimless.min.js"></script>
+  <script src="https://unpkg.com/rimless@0.0.3/lib/rimless.min.js"></script>
 </head>
 
 <body>
   <script>
     const guestId = "foo";
+    console.log(rimless);
     const { guest } = rimless;
 
-    // returns the host object with the API defined by the host
-    const connection = await guest.connect({
-      sayHiToHost: (hostId) => \`hello host \${hostId}!\`,
-    });
+    async function connect() {
+      // returns the host object with the API defined by the host
+      const connection = await guest.connect({
+        sayHiToHost: (hostId) => "hello host",
+      });
 
-    // with the host object we can now run actions on the host
-    const res = await connection.remote.sayHiToGuest(guestId);
-    console.log("GUEST", res); // "hello guest!"
+      console.log("GUEST CONN", connection);
+
+      // with the host object we can now run actions on the host
+      const res = await connection.remote.sayHiToGuest(guestId);
+      console.log("GUEST", res); // "hello guest!"
+    }
+
+    connect();
   </script>
 </body>
 
@@ -46,11 +53,16 @@ function Demo() {
         sayHiToGuest: (guestId) => `hello guest ${guestId}!`,
       });
 
+      console.log(connection);
+
       // with the guest object we can now run actions on the iframe
       const res = await connection.remote.sayHiToHost("bar");
       console.log(res); // hello host bar!
 
       setChildAPI(connection.remote);
+
+      // close the connection
+      connection.close();
     }
     run();
   }, []);
@@ -68,6 +80,5 @@ function Demo() {
     </>);
 }
 
-
-storiesOf('Rimless', module)
-  .add('communication', () => <Demo />)
+storiesOf("rimless", module)
+  .add("communication", () => <Demo />)

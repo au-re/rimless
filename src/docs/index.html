@@ -12,16 +12,21 @@
 <body>
   <script>
     const guestId = "foo";
+    console.log(rimless);
     const { guest } = rimless;
 
-    // returns the host object with the API defined by the host
-    const connection = await guest.connect({
-      sayHiToHost: (hostId) => `hello host ${hostId}!`,
-    });
+    async function connect() {
+      // returns the host object with the API defined by the host
+      const connection = await guest.connect({
+        sayHiToHost: (hostId) => "hello host",
+      });
 
-    // with the host object we can now run actions on the host
-    const res = await connection.remote.sayHiToGuest(guestId);
-    console.log("GUEST", res); // "hello guest!"
+      // with the host object we can now run actions on the host
+      const res = await connection.remote.sayHiToGuest(guestId);
+      console.log("GUEST", res); // "hello guest!"
+    }
+
+    connect();
   </script>
 </body>
 

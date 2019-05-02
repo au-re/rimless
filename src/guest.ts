@@ -11,9 +11,6 @@ function connect(schema: ISchema, options?: any) {
     function handleHandshakeResponse(event: any) {
       if (event.data.action !== actions.HANDSHAKE_REPLY) return;
 
-      // TODO: extract methods from schema
-      const methods = extractMethods(schema);
-
       // register local methods
       const unregisterLocal = registerLocalMethods(schema, localMethods, event.data.connectionID);
 
