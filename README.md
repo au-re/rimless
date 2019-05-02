@@ -1,21 +1,21 @@
-[npm-url]: https://www.npmjs.com/package/@au-re/anchor
-[npm-image]: https://badge.fury.io/js/postmate.svg
+[npm-url]: https://www.npmjs.com/package/rimless
+[npm-image]: https://badge.fury.io/js/rimless.svg
 [commitizen-url]: http://commitizen.github.io/cz-cli/
 [commitizen-image]: https://img.shields.io/badge/commitizen-friendly-brightgreen.svg
 
-# anchor
+# rimless
 
 > iframe communication made easy with a promise-based API wrapping `postMessage`
 
 [![npm][npm-image]][npm-url]
 [![Commitizen friendly][commitizen-image]][commitizen-url]
 
-Create a schema defining the API your iframe will present to its host and vice versa. Then simply connect the two and `anchor` will take care of the rest.
+Create a schema defining the API your iframe will present to its host and vice versa. Then simply connect the two and `rimless` will take care of the rest.
 
 **In the host website**
 
 ```js
-import { host }  from "@au-re/anchor";
+import { host }  from "rimless";
 
 const iframe = document.getElementById("myIframe");
 
@@ -31,7 +31,7 @@ console.log(res); // "hello host!"
 **In the guest website**
 
 ```js
-import { guest }  from "@au-re/anchor";
+import { guest }  from "rimless";
 
 // returns the host object with the API defined by the host
 const connection = await guest.connect({
@@ -45,7 +45,7 @@ console.log(res); // "hello guest!"
 
 ## Alternatives
 
-This library is inspired by [Postmate]() and [Penpal]().
+This library is inspired by [Postmate](https://www.npmjs.com/package/postmate) and [Penpal](https://www.npmjs.com/package/penpal).
 
 ### Why does this library exists?
 
@@ -57,25 +57,17 @@ It solves several shortcommings of the previously mentioned two libraries:
 
 ## Installing
 
-Anchor can be installed via [npm]().
+Rimless can be installed via [npm](https://www.npmjs.com/package/rimless).
 
 ```
-$ npm i -S @au-re/anchor
+$ npm i -S rimless
 ```
 
 Loading from a CDN
 
 ```html
-<script src="unpkg.com/@au-re/anchor/umd/anchor.production.min.js"></script>
+<script src="unpkg.com/rimless/umd/rimless.production.min.js"></script>
 ```
-
-## Usage
-
-TODO: write me
-
-## API
-
-TODO: write me
 
 ## Overview
 

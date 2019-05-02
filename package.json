@@ -1,5 +1,5 @@
 {
-  "name": "@au-re/anchor",
+  "name": "rimless",
   "author": "Aurélien Franky",
   "version": "0.0.1",
   "description": "iframe communication made easy with a promise-based API wrapping `postMessage`",

@@ -24,7 +24,7 @@ const srcDoc = `
     });
 
     window.parent.postMessage({
-      action: "ANCHOR/HANDSHAKE_REQUEST",
+      action: "RIMLESS/HANDSHAKE_REQUEST",
       schema: {
         "foo": "bar",
         "run": (x) => \`Hello host! \${x}\`,
@@ -62,5 +62,5 @@ function Demo() {
 }
 
 
-storiesOf('Anchor', module)
+storiesOf('Rimless', module)
   .add('communication', () => <Demo />)
