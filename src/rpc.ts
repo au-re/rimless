@@ -13,7 +13,7 @@ import { actions, events, IRPCRequestPayload, IRPCResolvePayload, ISchema } from
  * @param _connectionID
  * @return a function to cancel all subscriptions
  */
-export function registerLocalMethods(schema: ISchema, methods: any[], _connectionID: string): any {
+export function registerLocalMethods(schema: ISchema = {}, methods: any[] = [], _connectionID: string): any {
   const listeners: any[] = [];
   methods.forEach((methodName) => {
 
@@ -64,7 +64,7 @@ export function registerLocalMethods(schema: ISchema, methods: any[], _connectio
  * @param _connectionID
  * @param remote
  */
-export function registerRemoteMethods(schema: ISchema, methods: any[], _connectionID: string, target: any) {
+export function registerRemoteMethods(schema: ISchema = {}, methods: any[] = [], _connectionID: string, target: any) {
   const remote = Object.assign({}, schema);
   const listeners: Array<() => void> = [];
   methods.forEach((methodName) => {
@@ -82,7 +82,7 @@ export function registerRemoteMethods(schema: ISchema, methods: any[], _connecti
  * @param _connectionID
  * @param remote
  */
-export function createRPC(_callName: string, _connectionID: string, target: any, listeners: Array<() => void>) {
+export function createRPC(_callName: string, _connectionID: string, target: any, listeners: Array<() => void> = []) {
   return (...args: any) => {
     return new Promise((resolve, reject) => {
       const callID = short.generate();

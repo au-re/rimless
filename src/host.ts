@@ -24,7 +24,7 @@ function isValidTarget(iframe: HTMLIFrameElement, event: any) {
  * @param options
  * @returns Promise
  */
-function connect(iframe: HTMLIFrameElement, schema: ISchema, options?: any) {
+function connect(iframe: HTMLIFrameElement, schema: ISchema = {}, options?: any) {
   if (!iframe) throw new Error("a target iframe is required");
 
   return new Promise((resolve, reject) => {

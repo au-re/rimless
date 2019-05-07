@@ -82,7 +82,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/au-re/mitred.git"
+    "url": "https://github.com/au-re/rimless.git"
   },
   "dependencies": {
     "lodash.get": "^4.4.2",

@@ -2,7 +2,7 @@ import { extractMethods } from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
 import { actions, events, ISchema } from "./types";
 
-function connect(schema: ISchema, options?: any) {
+function connect(schema: ISchema = {}, options?: any) {
   return new Promise((resolve, reject) => {
 
     const localMethods = extractMethods(schema);
