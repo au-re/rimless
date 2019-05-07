@@ -36,7 +36,7 @@ export function registerLocalMethods(schema: ISchema = {}, methods: any[] = [], 
           callName,
           connectionID,
           result,
-        });
+        }, event.origin);
       } catch (error) {
         event.source.postMessage({
           action: actions.RPC_REJECT,
@@ -44,7 +44,7 @@ export function registerLocalMethods(schema: ISchema = {}, methods: any[] = [], 
           callName,
           connectionID,
           error,
-        });
+        }, event.origin);
       }
     }
 
