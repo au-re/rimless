@@ -19,7 +19,7 @@ export function registerLocalMethods(schema: ISchema = {}, methods: any[] = [], 
 
     // handle a remote calling a local method
     async function handleCall(event: any) {
-      const { action, callID, connectionID, callName, args } = event.data as IRPCRequestPayload;
+      const { action, callID, connectionID, callName, args = [] } = event.data as IRPCRequestPayload;
 
       if (action !== actions.RPC_REQUEST) return;
       if (!isTrustedRemote(event)) return;
@@ -35,7 +35,7 @@ export function registerLocalMethods(schema: ISchema = {}, methods: any[] = [], 
           callID,
           callName,
           connectionID,
-          result,
+          result: JSON.parse(JSON.stringify(result)),
         }, event.origin);
       } catch (error) {
         event.source.postMessage({
@@ -43,7 +43,7 @@ export function registerLocalMethods(schema: ISchema = {}, methods: any[] = [], 
           callID,
           callName,
           connectionID,
-          error,
+          error: JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error))),
         }, event.origin);
       }
     }
@@ -104,7 +104,7 @@ export function createRPC(_callName: string, _connectionID: string, event: any, 
       // send the RPC request with arguments
       const payload = {
         action: actions.RPC_REQUEST,
-        args,
+        args: JSON.parse(JSON.stringify(args)),
         callID,
         callName: _callName,
         connectionID: _connectionID,
