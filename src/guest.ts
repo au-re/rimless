@@ -16,7 +16,7 @@ function connect(schema: ISchema = {}, options?: any) {
 
       // register remote methods
       const { remote, unregisterRemote } =
-        registerRemoteMethods(event.data.schema, event.data.methods, event.data.connectionID, window.parent);
+        registerRemoteMethods(event.data.schema, event.data.methods, event.data.connectionID, event);
 
       // close the connection and all listeners when called
       const close = () => {

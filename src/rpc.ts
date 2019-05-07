@@ -64,11 +64,11 @@ export function registerLocalMethods(schema: ISchema = {}, methods: any[] = [], 
  * @param _connectionID
  * @param remote
  */
-export function registerRemoteMethods(schema: ISchema = {}, methods: any[] = [], _connectionID: string, target: any) {
+export function registerRemoteMethods(schema: ISchema = {}, methods: any[] = [], _connectionID: string, event: any) {
   const remote = Object.assign({}, schema);
   const listeners: Array<() => void> = [];
   methods.forEach((methodName) => {
-    const rpc = createRPC(methodName, _connectionID, target, listeners);
+    const rpc = createRPC(methodName, _connectionID, event, listeners);
     set(remote, methodName, rpc);
   });
   return { remote, unregisterRemote: () => listeners.forEach((unregister) => unregister()) };
@@ -82,7 +82,7 @@ export function registerRemoteMethods(schema: ISchema = {}, methods: any[] = [],
  * @param _connectionID
  * @param remote
  */
-export function createRPC(_callName: string, _connectionID: string, target: any, listeners: Array<() => void> = []) {
+export function createRPC(_callName: string, _connectionID: string, event: any, listeners: Array<() => void> = []) {
   return (...args: any) => {
     return new Promise((resolve, reject) => {
       const callID = short.generate();
@@ -112,7 +112,7 @@ export function createRPC(_callName: string, _connectionID: string, target: any,
 
       window.addEventListener(events.MESSAGE, handleResponse);
       listeners.push(() => window.removeEventListener(events.MESSAGE, handleResponse));
-      target.postMessage(payload, target.origin);
+      event.source.postMessage(payload, event.origin);
     });
   };
 }

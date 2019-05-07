@@ -41,7 +41,7 @@ function connect(iframe: HTMLIFrameElement, schema: ISchema = {}, options?: any)
 
       // register remote methods
       const { remote, unregisterRemote } =
-        registerRemoteMethods(event.data.schema, event.data.methods, connectionID, event.source);
+        registerRemoteMethods(event.data.schema, event.data.methods, connectionID, event);
 
       // confirm the connection
       event.source.postMessage({
