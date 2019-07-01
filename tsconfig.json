@@ -1,5 +1,8 @@
 {
   "compilerOptions": {
+    "lib": [
+      "dom"
+    ],
     "declaration": true,
     "target": "es5",
     "module": "commonjs",
@@ -13,7 +16,7 @@
   },
   "exclude": [
     "lib",
-    "./src/tests",
-    "./src/docs"
+    "tests",
+    "docs"
   ]
 }

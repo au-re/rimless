@@ -1,62 +1,70 @@
 import React from "react";
 import { storiesOf } from "@storybook/react";
+import styled from "styled-components";
 
 import { host } from "../src/index";
-import template from "raw-loader!./index.html";
+
+const Background = styled.div`
+  display: flex;
+  flex-direction: column;
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 1rem;
+  font-family: Oswald, sans-serif;
+
+  button {
+    width: 120px;
+  }
+`;
+
+const Iframe = styled.iframe`
+  height: 240px;
+  width: 240px;
+  border: none;
+`;
+
+function makeRandomColor() {
+  const letters = "0123456789ABCDEF";
+  let color = "#";
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
 
 function Demo() {
-  const iframe1 = React.useRef(null);
-  const iframe2 = React.useRef(null);
-  const [message, setMessage] = React.useState("");
-  const [childSchema, setChildSchema] = React.useState({});
-  const [childMessage, setChildMessage] = React.useState("");
+  const iframe = React.useRef(null);
+  const [color, setColor] = React.useState();
+  const [connection, setConnection] = React.useState();
 
   React.useEffect(() => {
-    async function run() {
-
-      // returns the guest object with the API defined by the guest
-      const connection = await host.connect(iframe1.current, {
-        sendMessage: (message) => {
-          setChildMessage(message);
-        },
+    (async function () {
+      const _connection = await host.connect(iframe.current, {
+        setColor,
       });
-
-      host.connect(iframe2.current, {
-        sendMessage: (message) => {
-          setChildMessage(message);
-        },
-      });
-
-      setChildSchema(connection.remote);
-    }
-    run();
+      setConnection(_connection);
+    }());
   }, []);
 
   return (
-    <div>
-      <h1>HOST</h1>
-      <div>child message: {childMessage}</div>
-      <div>child schema:  {Object.keys(childSchema).join(";")}</div>
-      <input value={message} onChange={(e) => setMessage(e.target.value)}></input>
-      <button onClick={() => childSchema.sendMessage(message)}>call guest</button>
+    <Background style={{ background: color }}>
+      <div style={{ flex: 1 }}>
+        <h1>HOST</h1>
+        <button onClick={() => connection.remote.setColor(makeRandomColor())}>
+          call guest
+      </button>
+      </div>
 
-      <iframe
-        style={{ border: "1px solid #e2e2e2", height: "250px", width: "100%" }}
-        title="child"
-        ref={iframe1}
-        srcDoc={template}
-        sandbox="allow-same-origin allow-scripts"
-      />
-
-      <iframe
-        style={{ border: "1px solid #e2e2e2", height: "250px", width: "100%" }}
-        title="child"
-        ref={iframe2}
-        srcDoc={template}
-        sandbox="allow-same-origin allow-scripts"
-      />
-    </div>);
+      <div style={{ marginTop: "1rem" }}>
+        <Iframe
+          title="guest"
+          ref={iframe}
+          src={"http://m.au-re.com/static/index.html"}
+          sandbox="allow-same-origin allow-scripts"
+        />
+      </div>
+    </Background>);
 }
 
 storiesOf("rimless", module)
-  .add("communication", () => <Demo />)
+  .add("iframe communication", () => <Demo />)

@@ -3,10 +3,8 @@
 
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>guest page</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://unpkg.com/rimless@0.0.5/lib/rimless.min.js"></script>
+  <title>Rimless Guest</title>
+  <script src="https://unpkg.com/rimless/lib/rimless.min.js"></script>
   <style>
     html,
     body {
@@ -14,10 +12,18 @@
       padding: 0;
       height: 100%;
       width: 100%;
+      overflow: hidden;
       font-family: sans-serif;
+      background: white;
     }
 
     .content {
+      text-align: center;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      border: 1px solid #e2e2e2;
       padding: 1rem;
     }
 
@@ -33,6 +39,7 @@
       height: 8px;
       width: 8px;
       background: red;
+      border: 1px solid white;
     }
 
     .connection.connected {
@@ -42,42 +49,37 @@
 </head>
 
 <body>
-  <div class="content">
-    <h1>GUEST <span></span></h1>
+  <div id="content" class="content">
+    <h1>IFRAME</h1>
     <div id="connection" class="connection"></div>
-
-    <div class="item">
-      host message: <span id="message"></span>
-    </div>
-
-    <div class="item">
-      host schema: <span id="schema"></span>
-    </div>
-
-    <input id="msg" placeholder="message for parent"></input>
     <button id="btn">call host</button>
   </div>
 
   <script>
     const { guest } = rimless;
 
+    function makeRandomColor() {
+      const letters = "0123456789ABCDEF";
+      let color = "#";
+      for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+    }
+
     async function connect() {
 
-      // returns the host object with the API defined by the host
       const connection = await guest.connect({
-        foo: "foo",
-        bar: 1,
-        sendMessage: (message) => {
-          console.log("GUEST has been called", message)
-          document.getElementById("message").innerHTML = message
-        },
+        makeRandomColor,
+        setColor: (color) => {
+          document.body.style.background = color;
+        }
       });
 
       document.getElementById("connection").className += " connected"
-      document.getElementById("schema").innerHTML = Object.keys(connection.remote).join(";");
 
       document.getElementById("btn").onclick = async function () {
-        connection.remote.sendMessage(document.getElementById("msg").value);
+        connection.remote.setColor(makeRandomColor());
       }
     }
 
