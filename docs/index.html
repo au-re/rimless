@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>guest page</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://unpkg.com/rimless@0.0.5/lib/rimless.min.js"></script>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      font-family: sans-serif;
+    }
+
+    .content {
+      padding: 1rem;
+    }
+
+    .item {
+      margin-bottom: 1rem;
+    }
+
+    .connection {
+      position: absolute;
+      top: .5rem;
+      left: .5rem;
+      border-radius: 24px;
+      height: 8px;
+      width: 8px;
+      background: red;
+    }
+
+    .connection.connected {
+      background: green;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="content">
+    <h1>GUEST <span></span></h1>
+    <div id="connection" class="connection"></div>
+
+    <div class="item">
+      host message: <span id="message"></span>
+    </div>
+
+    <div class="item">
+      host schema: <span id="schema"></span>
+    </div>
+
+    <input id="msg" placeholder="message for parent"></input>
+    <button id="btn">call host</button>
+  </div>
+
+  <script>
+    const { guest } = rimless;
+
+    async function connect() {
+
+      // returns the host object with the API defined by the host
+      const connection = await guest.connect({
+        foo: "foo",
+        bar: 1,
+        sendMessage: (message) => {
+          console.log("GUEST has been called", message)
+          document.getElementById("message").innerHTML = message
+        },
+      });
+
+      document.getElementById("connection").className += " connected"
+      document.getElementById("schema").innerHTML = Object.keys(connection.remote).join(";");
+
+      document.getElementById("btn").onclick = async function () {
+        connection.remote.sendMessage(document.getElementById("msg").value);
+      }
+    }
+
+    connect();
+  </script>
+</body>
+
+</html>

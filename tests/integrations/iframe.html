@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>guest</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Oswald, sans-serif;
+      overflow: hidden;
+    }
+
+    iframe {
+      height: 200px;
+      width: 200px;
+      border: 1px solid #e2e2e2;
+    }
+
+    #color {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      height: 2rem;
+      width: 2rem;
+      background: #f2f2f2;
+    }
+  </style>
+</head>
+
+<body>
+  <!--
+    connect an iframe to its host
+  -->
+
+  <h1>iframe</h1>
+  <button id="btn">set host color</button>
+
+  <script src="./rimless.min.js"></script>
+  <script>
+    const { guest } = rimless;
+
+    const colorContainer = document.getElementById("color");
+
+    console.assert(guest !== undefined);
+
+    // function exposed by the host
+    function makeRandomColor() {
+      const letters = "0123456789ABCDEF";
+      let color = "#";
+      for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+    }
+
+    function setColor(color) {
+      document.body.style.background = color;
+    }
+
+    // connection to the host
+    async function connect() {
+
+      const connection = await guest.connect({
+        name: "iframe",
+        makeRandomColor,
+        setColor,
+      });
+
+      console.assert(connection.remote);
+      console.assert(connection.remote.name === "host");
+
+      document.getElementById("btn").onclick = () => {
+        const randomColor = makeRandomColor();
+        connection.remote.setColor(randomColor);
+      }
+
+      const color = await connection.remote.makeRandomColor();
+      console.assert(typeof color === "string");
+    }
+
+    connect();
+  </script>
+</body>
+
+</html>

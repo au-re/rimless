@@ -2,60 +2,22 @@
 [npm-image]: https://badge.fury.io/js/rimless.svg
 [commitizen-url]: http://commitizen.github.io/cz-cli/
 [commitizen-image]: https://img.shields.io/badge/commitizen-friendly-brightgreen.svg
+[license-url]: https://github.com/au-re/rimless/LICENSE
+
+<p align="center">
+  <img src="https://github.com/au-re/rimless/assets/rimless.png"/>
+</p>
 
 # rimless
-
-> iframe communication made easy with a promise-based API wrapping `postMessage`
 
 [![npm][npm-image]][npm-url]
 [![Commitizen friendly][commitizen-image]][commitizen-url]
 
-Create a schema defining the API your iframe will present to its host and vice versa. Then simply connect the two and `rimless` will take care of the rest.
+> Rimless makes event base communication easy with a promise-based API wrapping [postMessage](). You can use `rimless` whenever you need to call procedures on or exchange data with **iframes** or **webworkers**. You can also expose functions on your host website that an iframe or webworker can call.
 
-**In the host website**
+It can be sometimes difficult to wrap your head arround event based code, especially in more complex senarios, rimless provides an event based API that makes communication easier.
 
-```js
-import { host }  from "rimless";
-
-const iframe = document.getElementById("myIframe");
-
-// returns the guest object with the API defined by the guest
-const connection = await host.connect(iframe, {
-  sayHiToGuest: () => "hello guest!",
-});
-
-// with the guest object we can now run actions on the iframe
-const res = await connection.remote.sayHiToHost();
-console.log(res); // "hello host!"
-```
-**In the guest website**
-
-```js
-import { guest }  from "rimless";
-
-// returns the host object with the API defined by the host
-const connection = await guest.connect({
-  sayHiToHost: () => "hello host!",
-});
-
-// with the host object we can now run actions on the host
-const res = await connection.remote.sayHiToGuest();
-console.log(res); // "hello guest!"
-```
-
-## Alternatives
-
-This library is inspired by [Postmate](https://www.npmjs.com/package/postmate) and [Penpal](https://www.npmjs.com/package/penpal).
-
-### Why does this library exists?
-
-It solves several shortcommings of the previously mentioned two libraries:
-
-- does not create the iframe (easier to work with libraries like react)
-- works with iframes using srcdoc
-- works with multiple iframes from the same origin
-
-## Installing
+## Installation
 
 Rimless can be installed via [npm](https://www.npmjs.com/package/rimless).
 
@@ -63,21 +25,159 @@ Rimless can be installed via [npm](https://www.npmjs.com/package/rimless).
 $ npm i -S rimless
 ```
 
-Loading from a CDN
+Or loaded from a CDN
 
 ```html
 <script src="https://unpkg.com/rimless/lib/rimless.min.js"></script>
 ```
 
-## Overview
+## Example Usage
 
-1. The guest (iframe) sends a handshake request to the host with a schema describing its API
+**In the host website**
+
+```js
+import { host }  from "rimless";
+
+const connection = await host.connect(iframe, {
+  myVariable: 12,
+  myFunction: (value) => `hello ${value}`,
+});
+
+const res = await connection.remote.myIframeFunction("here");
+console.log(res)                           // hello here
+console.log(connection.remote.myIframeVariable); // 42
+```
+**In the guest website**
+
+```js
+import { guest }  from "rimless";
+
+const connection = await guest.connect({
+  myIframeVariable: 42,
+  myIframeFunction: (value) => `hello ${value}`,
+});
+
+const res = await connection.remote.myFunction("there");
+console.log(res)                           // hello there
+console.log(connection.remote.myVariable); // 12
+```
+
+## Getting Started
+
+The host website is the website containing the iframe or from where your webworker is referenced.
+
+This is how you can **connect your website to an iframe or webworker**:
+
+```js
+import { host }  from "rimless";
+
+const iframe = document.getElementById("myIframe");
+const worker = new Worker("myWorker");
+
+// connect to the iframe
+host.connect(iframe);
+
+// connect to the worker
+host.connect(worker);
+```
+
+You also need to **connect your iframe/webworker to the host website**:
+
+```js
+import { guest }  from "rimless";
+
+// connect to the parent website
+guest.connect();
+```
+
+Usage from a webworker:
+
+```js
+importScripts("https://unpkg.com/rimless/lib/rimless.min.js");
+
+const { guest } = rimless;
+
+// connect to the parent website
+guest.connect();
+```
+
+### Exposing an API
+
+To do anything meaningfull with this connection you need to provide a schema that defines the API of the host/iframe/webworker. Any serializeable values as well as functions are ok to use. In the example below the host website provides a function that will update its background color when invoked.
+
+```js
+import { host }  from "rimless";
+
+const api = {
+  someValue: "hello world",
+  setColor: (color) => {
+    document.body.style.background = color;
+  },
+};
+
+const iframe = document.getElementById("myIframe");
+
+host.connect(iframe, api);
+```
+
+The api must be defined on connection, the same applies in the `iframe/webworker`.
+
+### Calling an RPC
+
+With the host API exposed we can now invoke the remote procedures provided.
+
+```js
+import { guest }  from "rimless";
+
+// connect returns a promise that resolves in a connection object
+guest.connect().then((connection) => {
+  connection.remote.setColor("#011627");
+});
+```
+
+### Closing a connection
+
+Closing a connection will remove all event listeners that were registered.
+
+```js
+import { guest }  from "rimless";
+
+guest.connect().then((connection) => {
+  connection.close();
+});
+```
+
+## How it Works
+
+1. The guest (iframe/webworker) sends a handshake request to the host with a schema describing its API
 2. The host confirms the handshake and returns a schema with its own API
 
 Now both can make use of the APIs they have shared with each other, e.g.
 
 3. The guest requests `someAction` on the parent.
-4. After verifying the origin, the parent will execute the function mapped to `someAction` and the value is returned to the guest.
+4. After verifying the origin, the parent will execute the function mapped to `someAction` and the result is returned to the guest.
+
+## Limitations
+
+All parameters passed through `postMessage` need to be serializeable. This applies for all return values of the functions you expose.
+
+```js
+// someFunction would return undefined when called in the remote.
+const api = {
+  someFunction: () => () => {},
+};
+```
+
+## Alternatives
+
+This library is inspired by [Postmate](https://www.npmjs.com/package/postmate) and [Penpal](https://www.npmjs.com/package/penpal).
+
+### So why does this library exist?
+
+- works with webworkers!
+- does not create the iframe (easier to work with libraries like react)
+- works with iframes using srcdoc
+- works with multiple iframes from the same origin
 
 ## Contributing
 
@@ -96,4 +196,4 @@ A set of scripts are provided for you to test, build and analyze the project.
 
 ## License
 
-MIT
+[MIT](license-url)
