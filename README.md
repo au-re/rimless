@@ -13,9 +13,11 @@
 [![npm][npm-image]][npm-url]
 [![Commitizen friendly][commitizen-image]][commitizen-url]
 
-> Rimless makes event base communication easy with a promise-based API wrapping [postMessage](). You can use `rimless` whenever you need to call procedures on or exchange data with **iframes** or **webworkers**. You can also expose functions on your host website that an iframe or webworker can call.
+> Rimless makes event based communication easy with a promise-based API wrapping [postMessage](). You can use `rimless` whenever you need to call procedures or exchange data with **iframes** or **webworkers**. You can also expose functions on your host website that an iframe or webworker can call.
 
-It can be sometimes difficult to wrap your head arround event based code, especially in more complex senarios, rimless provides an event based API that makes communication easier.
+It can be sometimes difficult to wrap your head arround event based code, especially in more complex senarios. Rimless provides an event based API that makes communication easier.
+
+Try it out: https://au-re.github.io/rimless.
 
 ## Installation
 
