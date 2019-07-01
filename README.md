@@ -5,7 +5,7 @@
 [license-url]: https://github.com/au-re/rimless/LICENSE
 
 <p align="center">
-  <img src="https://github.com/au-re/rimless/blob/master/assets/rimless.png"/>
+  <img src="https://raw.githubusercontent.com/au-re/rimless/master/assets/rimless.png"/>
 </p>
 
 # rimless
@@ -13,11 +13,11 @@
 [![npm][npm-image]][npm-url]
 [![Commitizen friendly][commitizen-image]][commitizen-url]
 
-> Rimless makes event based communication easy with a promise-based API wrapping [postMessage](). You can use `rimless` whenever you need to call procedures or exchange data with **iframes** or **webworkers**. You can also expose functions on your host website that an iframe or webworker can call.
+> Rimless makes event based communication easy with a promise-based API wrapping [postMessage](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage). Works with both **iframes** and **webworkers**.
 
-It can be sometimes difficult to wrap your head arround event based code, especially in more complex senarios. Rimless provides an event based API that makes communication easier.
+You can use `rimless` to call remote procedures, exchange data or expose local functions with **iframes**/**webworkers**.
 
-Try it out: https://au-re.github.io/rimless.
+You can see it in action here https://au-re.github.io/rimless.
 
 ## Installation
 
@@ -27,7 +27,7 @@ Rimless can be installed via [npm](https://www.npmjs.com/package/rimless).
 $ npm i -S rimless
 ```
 
-Or loaded from a CDN
+or from a CDN
 
 ```html
 <script src="https://unpkg.com/rimless/lib/rimless.min.js"></script>
@@ -35,7 +35,7 @@ Or loaded from a CDN
 
 ## Example Usage
 
-**In the host website**
+**in the host website**
 
 ```js
 import { host }  from "rimless";
@@ -45,11 +45,17 @@ const connection = await host.connect(iframe, {
   myFunction: (value) => `hello ${value}`,
 });
 
-const res = await connection.remote.myIframeFunction("here");
-console.log(res)                           // hello here
-console.log(connection.remote.myIframeVariable); // 42
+// access variables on the iframe
+console.log(connection.remote.myIframeVariable);  // 42
+
+// call remote procedures on the iframe
+const result = await connection.remote.myIframeFunction("here");
+console.log(result);  // hello here   
+
+// close the connection
+connection.close();
 ```
-**In the guest website**
+**in the iframe**
 
 ```js
 import { guest }  from "rimless";
@@ -59,16 +65,22 @@ const connection = await guest.connect({
   myIframeFunction: (value) => `hello ${value}`,
 });
 
-const res = await connection.remote.myFunction("there");
-console.log(res)                           // hello there
+// access variables on the host
 console.log(connection.remote.myVariable); // 12
+
+// call remote procedures on host
+const res = await connection.remote.myFunction("there");
+console.log(res);   // hello there
+
+// close the connection
+connection.close();
 ```
+
+---
 
 ## Getting Started
 
-The host website is the website containing the iframe or from where your webworker is referenced.
-
-This is how you can **connect your website to an iframe or webworker**:
+This is how you can **connect your website** to an iframe or webworker:
 
 ```js
 import { host }  from "rimless";
@@ -83,7 +95,9 @@ host.connect(iframe);
 host.connect(worker);
 ```
 
-You also need to **connect your iframe/webworker to the host website**:
+You also need to **connect your iframe/webworker** to the host website.
+
+Usage from an iframe:
 
 ```js
 import { guest }  from "rimless";
@@ -105,13 +119,12 @@ guest.connect();
 
 ### Exposing an API
 
-To do anything meaningfull with this connection you need to provide a schema that defines the API of the host/iframe/webworker. Any serializeable values as well as functions are ok to use. In the example below the host website provides a function that will update its background color when invoked.
+To do anything meaningfull with this connection you need to provide a schema that defines **the API** of the host/iframe/webworker. Any serializeable values as well as functions are ok to use. In the example below the host website provides a function that will update its background color when invoked.
 
 ```js
 import { host }  from "rimless";
 
 const api = {
-  someValue: "hello world",
   setColor: (color) => {
     document.body.style.background = color;
   },
@@ -122,16 +135,17 @@ const iframe = document.getElementById("myIframe");
 host.connect(iframe, api);
 ```
 
-The api must be defined on connection, the same applies in the `iframe/webworker`.
+The api schema must be passed on connection, the same applies to the `iframe/webworker`.
 
 ### Calling an RPC
 
-With the host API exposed we can now invoke the remote procedures provided.
+With the host API exposed we can now invoke the remote procedure from the iframe.
 
 ```js
 import { guest }  from "rimless";
 
 // connect returns a promise that resolves in a connection object
+// `connection.remote` contains the api you can invoke
 guest.connect().then((connection) => {
   connection.remote.setColor("#011627");
 });
@@ -148,6 +162,7 @@ guest.connect().then((connection) => {
   connection.close();
 });
 ```
+---
 
 ## How it Works
 
@@ -161,7 +176,7 @@ Now both can make use of the APIs they have shared with each other, e.g.
 
 ## Limitations
 
-All parameters passed through `postMessage` need to be serializeable. This applies for all return values of the functions you expose.
+All parameters passed through `postMessage` need to be serializeable. This applies also for all return values of the functions you expose.
 
 ```js
 // someFunction would return undefined when called in the remote.
@@ -181,6 +196,46 @@ This library is inspired by [Postmate](https://www.npmjs.com/package/postmate) a
 - works with iframes using srcdoc
 - works with multiple iframes from the same origin
 
+---
+
+## API
+
+Rimless exports two objects: `host` and  `guest`.
+
+> ### `host.connect`
+
+Connect your website to a "guest" (iframe/webworker).
+
+```js
+host.connect(iframe, { 
+  log: (value) => console.log(value)
+});
+```
+
+| Name | Type | Description | Required |
+| --- | --- | --- | --- |
+| `guest` | `HTMLIFrameElement` or `Worker` | Target of the connection | required |
+| `schema` | `object` | schema of the api you want to expose | - |
+| `options` | `object` | - | - |
+
+
+> ### `guest.connect`
+
+Connect a "guest" to your website. The guest connection automatically happens based on the environment it is run.
+
+```js
+guest.connect({ 
+  log: (value) => console.log(value)
+});
+```
+
+| Name | Type | Description | Default |
+| --- | --- | --- | --- |
+| `schema` | `object` | schema of the api you want to expose | - |
+| `options` | `object` | - | - |
+
+---
+
 ## Contributing
 
 We use the [airbnb style guide](https://github.com/airbnb/javascript) when writing javascript, with
@@ -191,10 +246,6 @@ We use [commitizen](https://github.com/commitizen/cz-cli) and
 [angular's conventional changelog](https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commits)
 to enforce a consistent commit format. When writing commits, make sure you run `npm run commit`
 instead of `git commit`.
-
-### Scripts
-
-A set of scripts are provided for you to test, build and analyze the project.
 
 ## License
 
