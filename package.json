@@ -3,7 +3,7 @@
   "author": "Aurélien Franky",
   "version": "0.0.9",
   "homepage": "https://au-re.github.io/rimless",
-  "description": "iframe communication made easy with a promise-based API wrapping `postMessage`",
+  "description": "event base communication made easy with a promise-based API wrapping `postMessage`",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
@@ -19,47 +19,59 @@
     "lint": "tslint -c tslint.json 'src/**/*.ts'",
     "prepare": "npm run build",
     "browserify": "browserify ./lib/index.js -s rimless | uglifyjs > ./lib/rimless.min.js",
-    "build": "tsc --build && npm run browserify",
+    "min2tests": "cp ./lib/rimless.min.js ./tests/integrations",
+    "build": "tsc --build && npm run browserify && npm run min2tests",
     "build:storybook": "build-storybook",
     "deploy": "gh-pages -d storybook-static",
     "predeploy": "npm run build-storybook",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/au-re/rimless.git"
+  },
+  "dependencies": {
+    "lodash.get": "^4.4.2",
+    "lodash.set": "^4.3.2",
+    "short-uuid": "^3.1.0"
+  },
   "devDependencies": {
     "@babel/core": "^7.4.3",
-    "@storybook/addon-actions": "^5.0.11",
-    "@storybook/addon-links": "^5.0.11",
-    "@storybook/addon-options": "^5.0.11",
-    "@storybook/addons": "^5.0.11",
-    "@storybook/react": "^5.0.11",
-    "@storybook/theming": "^5.0.11",
-    "@types/jest": "^24.0.11",
+    "@storybook/addon-actions": "^5.1.9",
+    "@storybook/addon-links": "^5.1.9",
+    "@storybook/addon-options": "^5.1.9",
+    "@storybook/addons": "^5.1.9",
+    "@storybook/react": "^5.1.9",
+    "@storybook/theming": "^5.1.9",
+    "@types/jest": "^24.0.15",
     "@types/lodash.get": "^4.4.6",
     "@types/lodash.isequal": "^4.5.5",
     "@types/lodash.set": "^4.3.6",
-    "@types/storybook-readme": "^5.0.2",
+    "@types/storybook-readme": "^5.0.3",
     "awesome-typescript-loader": "^5.2.1",
-    "babel-loader": "^8.0.5",
-    "commitizen": "^3.0.7",
+    "babel-loader": "^8.0.6",
+    "browserify": "^16.2.3",
+    "commitizen": "^3.1.1",
     "cz-emoji": "^1.1.2",
     "faker": "^4.1.0",
     "file-loader": "^3.0.1",
     "gh-pages": "^2.0.1",
     "identity-obj-proxy": "^3.0.0",
-    "jest": "^24.6.0",
+    "jest": "^24.8.0",
     "react": "^16.8.6",
     "react-docgen-typescript-webpack-plugin": "^1.1.0",
     "react-dom": "^16.8.6",
-    "source-map-explorer": "^1.8.0",
+    "source-map-explorer": "^2.0.1",
     "source-map-loader": "^0.2.4",
-    "storybook-readme": "^5.0.1",
-    "ts-jest": "^24.0.1",
-    "tslint": "^5.12.1",
+    "storybook-readme": "^5.0.5",
+    "styled-components": "^4.3.2",
+    "ts-jest": "^24.0.2",
+    "tslint": "^5.18.0",
     "tslint-config-airbnb": "^5.11.1",
     "tslint-react": "^3.6.0",
-    "typescript": "^3.3.3",
-    "webpack-cli": "^3.2.3"
+    "typescript": "^3.5.2",
+    "webpack-cli": "^3.3.5"
   },
   "config": {
     "cz-emoji": {},
@@ -79,14 +91,5 @@
       "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/config/jext/fileMock.js",
       "\\.(css|sass|scss)$": "<rootDir>/config/jest/cssMock.js"
     }
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/au-re/rimless.git"
-  },
-  "dependencies": {
-    "lodash.get": "^4.4.2",
-    "lodash.set": "^4.3.2",
-    "short-uuid": "^3.1.0"
   }
 }
