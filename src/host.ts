@@ -24,36 +24,45 @@ function isValidTarget(iframe: HTMLIFrameElement, event: any) {
  * @param options
  * @returns Promise
  */
-function connect(iframe: HTMLIFrameElement, schema: ISchema = {}, options?: any) {
-  if (!iframe) throw new Error("a target iframe is required");
+function connect(guest: HTMLIFrameElement | Worker, schema: ISchema = {}, options?: any) {
+  if (!guest) throw new Error("a target is required");
+
+  // this check should be improved
+  const guestIsWorker =
+    (guest as Worker).onerror !== undefined &&
+    (guest as Worker).onmessage !== undefined;
+  const listeners = guestIsWorker ? guest : window;
 
   return new Promise((resolve, reject) => {
     const connectionID = short.generate();
 
     // on handshake request
     function handleHandshake(event: any) {
-      if (!isValidTarget(iframe, event)) return;
+      if (!guestIsWorker && !isValidTarget(guest as HTMLIFrameElement, event)) return;
       if (event.data.action !== actions.HANDSHAKE_REQUEST) return;
 
       // register local methods
       const localMethods = extractMethods(schema);
-      const unregisterLocal = registerLocalMethods(schema, localMethods, connectionID);
+      const unregisterLocal = registerLocalMethods(schema, localMethods, connectionID, guestIsWorker ? (guest as Worker) : undefined);
 
       // register remote methods
       const { remote, unregisterRemote } =
-        registerRemoteMethods(event.data.schema, event.data.methods, connectionID, event);
+        registerRemoteMethods(event.data.schema, event.data.methods, connectionID, event, guestIsWorker ? (guest as Worker) : undefined);
 
-      // confirm the connection
-      event.source.postMessage({
+      const payload = {
         action: actions.HANDSHAKE_REPLY,
         connectionID,
         methods: localMethods,
         schema: JSON.parse(JSON.stringify(schema)),
-      }, event.origin);
+      };
+
+      // confirm the connection
+      if (guestIsWorker) (guest as Worker).postMessage(payload);
+      else event.source.postMessage(payload, event.origin);
 
       // close the connection and all listeners when called
       const close = () => {
-        window.removeEventListener(events.MESSAGE, handleHandshake);
+        listeners.removeEventListener(events.MESSAGE, handleHandshake);
         unregisterRemote();
         unregisterLocal();
       };
@@ -65,7 +74,7 @@ function connect(iframe: HTMLIFrameElement, schema: ISchema = {}, options?: any)
     }
 
     // subscribe to HANDSHAKE MESSAGES
-    window.addEventListener(events.MESSAGE, handleHandshake);
+    listeners.addEventListener(events.MESSAGE, handleHandshake);
   });
 }
 

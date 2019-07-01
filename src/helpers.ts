@@ -1,13 +1,30 @@
 export const CONNECTION_TIMEOUT = 1000;
 
-// check if the remote is trusted
+/**
+ * check if the remote is trusted
+ *
+ * @param event
+ */
 export function isTrustedRemote(event: any) {
   // TODO: implement
   return true;
 }
 
-// we cannot send functions through postMessage
-// extract the path to all functions in the schema
+/**
+ * check if run in a webworker
+ *
+ * @param event
+ */
+export function isWorker() {
+  return typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope
+}
+
+/**
+ * we cannot send functions through postMessage
+ * extract the path to all functions in the schema
+ *
+ * @param obj
+ */
 export function extractMethods(obj: any) {
   const paths = [];
   (function parse(obj: any, path = "") {

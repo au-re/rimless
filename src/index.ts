@@ -1,4 +1,6 @@
 import guest from "./guest";
 import host from "./host";
 
-export { host, guest };
+import { isWorker } from "./helpers";
+
+export { host, guest, isWorker };

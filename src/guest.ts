@@ -1,4 +1,4 @@
-import { extractMethods } from "./helpers";
+import { extractMethods, isWorker } from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
 import { actions, events, ISchema } from "./types";
 
@@ -20,7 +20,7 @@ function connect(schema: ISchema = {}, options: any = {}) {
 
       // close the connection and all listeners when called
       const close = () => {
-        window.removeEventListener(events.MESSAGE, handleHandshakeResponse);
+        self.removeEventListener(events.MESSAGE, handleHandshakeResponse);
         unregisterRemote();
         unregisterLocal();
       };
@@ -31,12 +31,17 @@ function connect(schema: ISchema = {}, options: any = {}) {
     }
 
     // subscribe to HANDSHAKE REPLY MESSAGES
-    window.addEventListener(events.MESSAGE, handleHandshakeResponse);
-    window.parent.postMessage({
+    self.addEventListener(events.MESSAGE, handleHandshakeResponse);
+
+    const payload = {
       action: actions.HANDSHAKE_REQUEST,
       methods: localMethods,
       schema: JSON.parse(JSON.stringify(schema)),
-    }, "*");
+    };
+
+    // publish the HANDSHAKE REQUEST
+    if (isWorker()) (self as any).postMessage(payload);
+    else window.parent.postMessage(payload, "*");
   });
 }
 
