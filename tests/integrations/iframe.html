@@ -71,6 +71,9 @@
 
       console.assert(connection.remote);
       console.assert(connection.remote.name === "host");
+      console.assert(connection.remote.setColor);
+
+      console.log(connection.remote);
 
       document.getElementById("btn").onclick = () => {
         const randomColor = makeRandomColor();

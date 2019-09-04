@@ -19,7 +19,7 @@
     "lint": "tslint -c tslint.json 'src/**/*.ts'",
     "prepare": "npm run build",
     "browserify": "browserify ./lib/index.js -s rimless | uglifyjs > ./lib/rimless.min.js",
-    "min2tests": "cp ./lib/rimless.min.js ./tests/integrations",
+    "min2tests": "browserify ./lib/index.js -s rimless > ./tests/integrations/rimless.min.js",
     "build": "tsc --build && npm run browserify && npm run min2tests",
     "build:storybook": "build-storybook",
     "deploy": "gh-pages -d storybook-static",
@@ -34,7 +34,7 @@
   "dependencies": {
     "lodash.get": "^4.4.2",
     "lodash.set": "^4.3.2",
-    "short-uuid": "^3.1.0"
+    "short-uuid": "^3.1.1"
   },
   "devDependencies": {
     "@babel/core": "^7.4.3",

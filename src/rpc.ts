@@ -14,7 +14,12 @@ import { actions, events, IRPCRequestPayload, IRPCResolvePayload, ISchema } from
  * @param _connectionID
  * @return a function to cancel all subscriptions
  */
-export function registerLocalMethods(schema: ISchema = {}, methods: any[] = [], _connectionID: string, guest?: Worker): any {
+export function registerLocalMethods(
+  schema: ISchema = {},
+  methods: any[] = [],
+  _connectionID: string,
+  guest?: Worker): any {
+
   const listeners: any[] = [];
   methods.forEach((methodName) => {
 
@@ -33,8 +38,8 @@ export function registerLocalMethods(schema: ISchema = {}, methods: any[] = [], 
         callID,
         callName,
         connectionID,
-        result: null,
         error: null,
+        result: null,
       };
 
       // run function and return the results to the remote
@@ -68,13 +73,20 @@ export function registerLocalMethods(schema: ISchema = {}, methods: any[] = [], 
  * @param _connectionID
  * @param remote
  */
-export function registerRemoteMethods(schema: ISchema = {}, methods: any[] = [], _connectionID: string, event: any, guest?: Worker) {
+export function registerRemoteMethods(
+  schema: ISchema = {},
+  methods: any[] = [],
+  _connectionID: string,
+  event: any, guest?: Worker) {
+
   const remote = Object.assign({}, schema);
   const listeners: Array<() => void> = [];
+
   methods.forEach((methodName) => {
     const rpc = createRPC(methodName, _connectionID, event, listeners, guest);
     set(remote, methodName, rpc);
   });
+
   return { remote, unregisterRemote: () => listeners.forEach((unregister) => unregister()) };
 }
 
@@ -86,7 +98,13 @@ export function registerRemoteMethods(schema: ISchema = {}, methods: any[] = [],
  * @param _connectionID
  * @param remote
  */
-export function createRPC(_callName: string, _connectionID: string, event: any, listeners: Array<() => void> = [], guest?: Worker) {
+export function createRPC(
+  _callName: string,
+  _connectionID: string,
+  event: any,
+  listeners: Array<() => void> = [],
+  guest?: Worker) {
+
   return (...args: any) => {
     return new Promise((resolve, reject) => {
       const callID = short.generate();

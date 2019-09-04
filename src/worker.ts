@@ -1,14 +1,11 @@
-import { extractMethods, isWorker } from "./helpers";
+import { extractMethods } from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
 import { actions, events, ISchema } from "./types";
 
-const REQUEST_INTERVAL = 600;
-const TIMEOUT_INTERVAL = 3000;
+if (!onmessage || !postMessage) throw new Error("must be run within a webworker");
 
-let interval: any = null;
-let connected = false;
+function connect(schema: ISchema = {}, options: any = {}): Promise<any> {
 
-function connect(schema: ISchema = {}, options: any = {}) {
   return new Promise((resolve, reject) => {
 
     const localMethods = extractMethods(schema);
@@ -26,12 +23,9 @@ function connect(schema: ISchema = {}, options: any = {}) {
 
       // close the connection and all listeners when called
       const close = () => {
-        self.removeEventListener(events.MESSAGE, handleHandshakeResponse);
         unregisterRemote();
         unregisterLocal();
       };
-
-      connected = true;
 
       // resolve connection object
       const connection = { remote, close };
@@ -39,28 +33,13 @@ function connect(schema: ISchema = {}, options: any = {}) {
     }
 
     // subscribe to HANDSHAKE REPLY MESSAGES
-    self.addEventListener(events.MESSAGE, handleHandshakeResponse);
+    (onmessage as any)(handleHandshakeResponse);
 
-    const payload = {
+    (postMessage as any)({
       action: actions.HANDSHAKE_REQUEST,
       methods: localMethods,
       schema: JSON.parse(JSON.stringify(schema)),
-    };
-
-    interval = setInterval(() => {
-      if (connected) return clearInterval(interval);
-
-      // publish the HANDSHAKE REQUEST
-      if (isWorker()) (self as any).postMessage(payload);
-      else window.parent.postMessage(payload, "*");
-
-    }, REQUEST_INTERVAL);
-
-    // timeout the connection after a time
-    setTimeout(() => {
-      if (!connected) reject("connection timeout");
-    }, TIMEOUT_INTERVAL);
-
+    });
   });
 }
 

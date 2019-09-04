@@ -1,4 +1,4 @@
-import { host, guest } from "../src/index";
+import { guest, host } from "../src/index";
 
 describe("guest", () => {
 
