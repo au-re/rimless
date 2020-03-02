@@ -2,7 +2,7 @@ import short from "short-uuid";
 
 import { extractMethods, getOriginFromURL } from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
-import { actions, events, IConnections, ISchema } from "./types";
+import { actions, events, IConnections, IConnection, ISchema } from "./types";
 
 const connections: IConnections = {};
 
@@ -24,7 +24,7 @@ function isValidTarget(iframe: HTMLIFrameElement, event: any) {
  * @param options
  * @returns Promise
  */
-function connect(guest: HTMLIFrameElement | Worker, schema: ISchema = {}, options?: any) {
+function connect(guest: HTMLIFrameElement | Worker, schema: ISchema = {}, options?: any): Promise<IConnection> {
   if (!guest) throw new Error("a target is required");
 
   // this check should be improved
@@ -68,7 +68,7 @@ function connect(guest: HTMLIFrameElement | Worker, schema: ISchema = {}, option
       };
 
       // resolve connection object
-      const connection = { remote, close };
+      const connection: IConnection = { remote, close };
       connections[connectionID] = connection;
       return resolve(connection);
     }
@@ -77,6 +77,8 @@ function connect(guest: HTMLIFrameElement | Worker, schema: ISchema = {}, option
     listeners.addEventListener(events.MESSAGE, handleHandshake);
   });
 }
+
+
 
 export default ({
   connect,
