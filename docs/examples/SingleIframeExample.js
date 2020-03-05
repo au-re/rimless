@@ -1,27 +1,7 @@
 import React from "react";
-import { storiesOf } from "@storybook/react";
-import styled from "styled-components";
+import { Background, Iframe } from "./Components";
 
-import { host } from "../src/index";
-
-const Background = styled.div`
-  display: flex;
-  flex-direction: column;
-  max-width: 42rem;
-  margin: 0 auto;
-  padding: 1rem;
-  font-family: Oswald, sans-serif;
-
-  button {
-    width: 120px;
-  }
-`;
-
-const Iframe = styled.iframe`
-  height: 240px;
-  width: 240px;
-  border: none;
-`;
+import { host } from "../../src/index";
 
 function makeRandomColor() {
   const letters = "0123456789ABCDEF";
@@ -32,27 +12,29 @@ function makeRandomColor() {
   return color;
 }
 
-function Demo() {
+function SingleIframeExample() {
   const iframe = React.useRef(null);
   const [color, setColor] = React.useState();
   const [connection, setConnection] = React.useState();
 
   React.useEffect(() => {
+    if (!iframe.current) return;
     (async function () {
       const _connection = await host.connect(iframe.current, {
         setColor,
       });
       setConnection(_connection);
     }());
-  }, []);
+  }, [iframe.current]);
 
   return (
     <Background style={{ background: color }}>
+
       <div style={{ flex: 1 }}>
         <h1>HOST</h1>
         <button onClick={() => connection.remote.setColor(makeRandomColor())}>
-          call guest
-      </button>
+          call iframe function
+        </button>
       </div>
 
       <div style={{ marginTop: "1rem" }}>
@@ -66,5 +48,4 @@ function Demo() {
     </Background>);
 }
 
-storiesOf("rimless", module)
-  .add("iframe communication", () => <Demo />)
+export default SingleIframeExample;

@@ -50,7 +50,7 @@ console.log(connection.remote.myIframeVariable);  // 42
 
 // call remote procedures on the iframe
 const result = await connection.remote.myIframeFunction("here");
-console.log(result);  // hello here   
+console.log(result);  // hello here
 
 // close the connection
 connection.close();
@@ -119,7 +119,7 @@ guest.connect();
 
 ### Exposing an API
 
-To do anything meaningfull with this connection you need to provide a schema that defines **the API** of the host/iframe/webworker. Any serializeable values as well as functions are ok to use. In the example below the host website provides a function that will update its background color when invoked.
+To do anything meaningful with this connection you need to provide a schema that defines **the API** of the host/iframe/webworker. Any serializeable values as well as functions are ok to use. In the example below the host website provides a function that will update its background color when invoked.
 
 ```js
 import { host }  from "rimless";
@@ -207,7 +207,7 @@ Rimless exports two objects: `host` and  `guest`.
 Connect your website to a "guest" (iframe/webworker).
 
 ```js
-host.connect(iframe, { 
+host.connect(iframe, {
   log: (value) => console.log(value)
 });
 ```
@@ -224,7 +224,7 @@ host.connect(iframe, {
 Connect a "guest" to your website. The guest connection automatically happens based on the environment it is run.
 
 ```js
-guest.connect({ 
+guest.connect({
   log: (value) => console.log(value)
 });
 ```

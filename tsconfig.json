@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
     "lib": [
-      "dom"
+      "dom",
+      "dom.iterable",
+      "esnext"
     ],
     "declaration": true,
     "target": "es5",
@@ -12,11 +14,9 @@
     "strict": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "resolveJsonModule": true
+    "skipLibCheck": true
   },
-  "exclude": [
-    "lib",
-    "tests",
-    "docs"
+  "include": [
+    "src"
   ]
 }
