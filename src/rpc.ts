@@ -33,7 +33,7 @@ export function registerLocalMethods(
       if (callName !== methodName) return;
       if (connectionID !== _connectionID) return;
 
-      const payload = {
+      const payload: IRPCResolvePayload = {
         action: actions.RPC_RESOLVE,
         callID,
         callName,

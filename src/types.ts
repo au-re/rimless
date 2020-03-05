@@ -14,6 +14,11 @@ export interface ISchema {
   [prop: string]: any;
 }
 
+export interface IConnection {
+  remote: ISchema;
+  close: () => void;
+}
+
 export interface IConnections {
   [connectionID: string]: ISchema;
 }
@@ -48,8 +53,8 @@ export interface IRPCRequestPayload {
 
 export interface IRPCResolvePayload {
   action: actions.RPC_RESOLVE | actions.RPC_REJECT;
-  result?: any;
-  error?: Error;
+  result?: any | null;
+  error?: Error | null;
   callID: string;
   callName: string;
   connectionID: string;

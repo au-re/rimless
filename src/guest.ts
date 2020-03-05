@@ -1,6 +1,6 @@
 import { extractMethods, isWorker } from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
-import { actions, events, ISchema } from "./types";
+import { actions, events, IConnection, ISchema } from "./types";
 
 const REQUEST_INTERVAL = 600;
 const TIMEOUT_INTERVAL = 3000;
@@ -8,7 +8,7 @@ const TIMEOUT_INTERVAL = 3000;
 let interval: any = null;
 let connected = false;
 
-function connect(schema: ISchema = {}, options: any = {}) {
+function connect(schema: ISchema = {}, options: any = {}): Promise<IConnection> {
   return new Promise((resolve, reject) => {
 
     const localMethods = extractMethods(schema);
