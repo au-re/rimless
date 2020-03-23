@@ -138,7 +138,7 @@ export function createRPC(
 
       if (guest) guest.postMessage(payload);
       else if (isWorker()) (self as any).postMessage(payload);
-      else event.source.postMessage(payload, event.origin);
+      else (event.source || event.target).postMessage(payload, event.origin);
     });
   };
 }
