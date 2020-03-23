@@ -1,4 +1,6 @@
-importScripts("./rimless.min.js")
+/* global rimless */
+
+importScripts("./rimless.min.js");
 
 const { guest } = rimless;
 
@@ -20,6 +22,3 @@ async function connect() {
 }
 
 connect();
-
-
-
