@@ -24,7 +24,11 @@ function isValidTarget(iframe: HTMLIFrameElement, event: any) {
  * @param options
  * @returns Promise
  */
-function connect(guest: HTMLIFrameElement | Worker, schema: ISchema = {}, options?: any): Promise<IConnection> {
+function connect(
+  guest: HTMLIFrameElement | Worker,
+  schema: ISchema = {},
+  options?: any,
+): Promise<IConnection> {
   if (!guest) throw new Error("a target is required");
 
   // this check should be improved
@@ -43,7 +47,8 @@ function connect(guest: HTMLIFrameElement | Worker, schema: ISchema = {}, option
 
       // register local methods
       const localMethods = extractMethods(schema);
-      const unregisterLocal = registerLocalMethods(schema, localMethods, connectionID, guestIsWorker ? (guest as Worker) : undefined);
+      const unregisterLocal =
+        registerLocalMethods(schema, localMethods, connectionID, guestIsWorker ? (guest as Worker) : undefined);
 
       // register remote methods
       const { remote, unregisterRemote } =
@@ -77,8 +82,6 @@ function connect(guest: HTMLIFrameElement | Worker, schema: ISchema = {}, option
     listeners.addEventListener(events.MESSAGE, handleHandshake);
   });
 }
-
-
 
 export default ({
   connect,

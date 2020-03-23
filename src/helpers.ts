@@ -16,7 +16,7 @@ export function isTrustedRemote(event: any) {
  * @param event
  */
 export function isWorker() {
-  return typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope
+  return typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
 }
 
 /**
@@ -26,9 +26,9 @@ export function isWorker() {
  * @param obj
  */
 export function extractMethods(obj: any) {
-  const paths = [];
+  const paths: string[] = [];
   (function parse(obj: any, path = "") {
-    for (const prop in obj) {
+    Object.keys(obj).forEach((prop) => {
       const propPath = path ? `${path}.${prop}` : prop;
       if (obj[prop] === Object(obj[prop])) {
         parse(obj[prop], propPath);
@@ -36,8 +36,8 @@ export function extractMethods(obj: any) {
       if (typeof obj[prop] === "function") {
         paths.push(propPath);
       }
-    }
-  })(obj);
+    });
+  }(obj));
   return paths;
 }
 
@@ -51,7 +51,7 @@ const ports: any = { "http:": "80", "https:": "443" };
  */
 export function getOriginFromURL(url: string | null) {
 
-  const location = document.location;
+  const { location } = document;
 
   const regexResult = urlRegex.exec(url || "");
   let protocol;
@@ -61,9 +61,7 @@ export function getOriginFromURL(url: string | null) {
   if (regexResult) {
     // It's an absolute URL. Use the parsed info.
     // regexResult[1] will be undefined if the URL starts with //
-    protocol = regexResult[1] ? regexResult[1] : location.protocol;
-    hostname = regexResult[2];
-    port = regexResult[4];
+    [, protocol = location.protocol, hostname, , port] = regexResult;
   } else {
     // It's a relative path. Use the current location's info.
     protocol = location.protocol;

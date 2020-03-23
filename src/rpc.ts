@@ -25,7 +25,13 @@ export function registerLocalMethods(
 
     // handle a remote calling a local method
     async function handleCall(event: any) {
-      const { action, callID, connectionID, callName, args = [] } = event.data as IRPCRequestPayload;
+      const {
+        action,
+        callID,
+        connectionID,
+        callName,
+        args = [],
+      } = event.data as IRPCRequestPayload;
 
       if (action !== actions.RPC_REQUEST) return;
       if (!isTrustedRemote(event)) return;
@@ -66,37 +72,16 @@ export function registerLocalMethods(
 }
 
 /**
- * create a remote object based on the remote schema and methods. Functions in that object will
- * emit an event to the remote to execute an RPC.
- *
- * @param schema
- * @param _connectionID
- * @param remote
- */
-export function registerRemoteMethods(
-  schema: ISchema = {},
-  methods: any[] = [],
-  _connectionID: string,
-  event: any, guest?: Worker) {
-
-  const remote = Object.assign({}, schema);
-  const listeners: Array<() => void> = [];
-
-  methods.forEach((methodName) => {
-    const rpc = createRPC(methodName, _connectionID, event, listeners, guest);
-    set(remote, methodName, rpc);
-  });
-
-  return { remote, unregisterRemote: () => listeners.forEach((unregister) => unregister()) };
-}
-
-/**
- * create a function that will call the remote when invoked with the required arguments
- * listen to the event returned by the remote and resolve the promise
+ * Create a function that will make an RPC request to the remote with some arguments.
+ * Listen to an event that returns the results from the remote.
  *
  * @param _callName
  * @param _connectionID
- * @param remote
+ * @param event
+ * @param listeners
+ * @param guest
+ *
+ * @returns a promise with the result of the RPC
  */
 export function createRPC(
   _callName: string,
@@ -111,7 +96,13 @@ export function createRPC(
 
       // on RPC response
       function handleResponse(event: any) {
-        const { callID, connectionID, callName, result, error, action } = event.data as IRPCResolvePayload;
+        const {
+          callID,
+          connectionID,
+          callName,
+          result,
+          error,
+          action } = event.data as IRPCResolvePayload;
 
         if (!isTrustedRemote(event)) return;
         if (!callID || !callName) return;
@@ -141,4 +132,32 @@ export function createRPC(
       else event.source.postMessage(payload, event.origin);
     });
   };
+}
+
+/**
+ * create an object based on the remote schema and methods. Functions in that object will
+ * emit an event that will trigger the RPC on the remote.
+ *
+ * @param schema
+ * @param methods
+ * @param _connectionID
+ * @param event
+ * @param guest
+ */
+export function registerRemoteMethods(
+  schema: ISchema = {},
+  methods: any[] = [],
+  _connectionID: string,
+  event: any,
+  guest?: Worker) {
+
+  const remote = { ...schema };
+  const listeners: Array<() => void> = [];
+
+  methods.forEach((methodName) => {
+    const rpc = createRPC(methodName, _connectionID, event, listeners, guest);
+    set(remote, methodName, rpc);
+  });
+
+  return { remote, unregisterRemote: () => listeners.forEach((unregister) => unregister()) };
 }

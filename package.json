@@ -19,6 +19,7 @@
     "clean": "rm -rf node_modules && npm i",
     "lint": "tslint -c tslint.json 'src/**/*.ts'",
     "prepare": "npm run build",
+    "integrations": "npx serve -p 8080 tests/integrations/",
     "browserify": "browserify ./lib/index.js -s rimless | uglifyjs > ./lib/rimless.min.js",
     "min2tests": "browserify ./lib/index.js -s rimless > ./tests/integrations/rimless.min.js",
     "build": "tsc --build && npm run browserify && npm run min2tests",

@@ -86,6 +86,7 @@
     "no-param-reassign": "off",
     "no-plusplus": "off",
     "no-shadow": "off",
+    "no-restricted-globals": "off",
     "object-curly-newline": "off",
     "operator-linebreak": "off",
     "padded-blocks": "off",

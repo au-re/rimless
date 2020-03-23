@@ -26,7 +26,10 @@ export interface IConnections {
 export interface IEvent extends EventListener {
   source?: Window;
   origin?: string;
-  data?: IHandshakeRequestPayload | IHandshakeConfirmationPayload | IRPCRequestPayload | IRPCResolvePayload;
+  data?: IHandshakeRequestPayload
+  | IHandshakeConfirmationPayload
+  | IRPCRequestPayload
+  | IRPCResolvePayload;
 }
 
 export interface IHandshakeRequestPayload {
