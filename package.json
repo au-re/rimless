@@ -1,7 +1,7 @@
 {
   "name": "rimless",
   "author": "Aurélien Franky",
-  "version": "0.1.5",
+  "version": "0.1.5-beta.0",
   "license": "MIT",
   "homepage": "https://au-re.github.io/rimless",
   "description": "event base communication made easy with a promise-based API wrapping `postMessage`",
