@@ -5,24 +5,23 @@
       "dom.iterable",
       "esnext"
     ],
+    "jsx": "react",
     "declaration": true,
     "target": "esnext",
     "module": "esnext",
     "sourceMap": true,
-    "rootDir": "./src",
+    "rootDir": "./",
     "outDir": "./lib",
     "strict": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "skipLibCheck": true,
-    "types": [
-      "jest",
-      "lodash.get",
-      "lodash.set",
-      "uuid"
-    ]
+    "skipLibCheck": true
   },
   "include": [
-    "src"
+    "src",
+    "docs"
+  ],
+  "exclude": [
+    "docs/**/*.mdx"
   ]
 }

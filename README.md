@@ -5,7 +5,7 @@
 [license-url]: https://github.com/au-re/rimless/LICENSE
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/au-re/rimless/master/assets/rimless.png"/>
+  <img src="https://raw.githubusercontent.com/au-re/rimless/master/assets/icon.png"/>
 </p>
 
 # rimless

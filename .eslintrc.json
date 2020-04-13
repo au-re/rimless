@@ -61,12 +61,14 @@
       "error",
       {
         "devDependencies": [
+          "docs/**/*",
           "**/stories/**/*.js",
           "**/*test.ts",
           "**/*test.tsx",
           "**/*stories.tsx",
           "src/setupTests.js",
-          "**/*__mocks__/**"
+          "**/*__mocks__/**",
+          "rollup.config.js"
         ]
       }
     ],
