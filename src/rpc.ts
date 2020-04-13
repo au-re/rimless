@@ -1,6 +1,6 @@
 import get from "lodash.get";
 import set from "lodash.set";
-import short from "short-uuid";
+import { v4 as uuidv4 } from "uuid";
 
 import { isTrustedRemote, isWorker } from "./helpers";
 import { actions, events, IRPCRequestPayload, IRPCResolvePayload, ISchema } from "./types";
@@ -92,7 +92,7 @@ export function createRPC(
 
   return (...args: any) => {
     return new Promise((resolve, reject) => {
-      const callID = short.generate();
+      const callID = uuidv4();
 
       // on RPC response
       function handleResponse(event: any) {

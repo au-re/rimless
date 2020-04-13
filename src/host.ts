@@ -1,4 +1,4 @@
-import short from "short-uuid";
+import { v4 as uuidv4 } from "uuid";
 
 import { extractMethods, getOriginFromURL } from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
@@ -38,7 +38,7 @@ function connect(
   const listeners = guestIsWorker ? guest : window;
 
   return new Promise((resolve, reject) => {
-    const connectionID = short.generate();
+    const connectionID = uuidv4();
 
     // on handshake request
     function handleHandshake(event: any) {

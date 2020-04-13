@@ -14,17 +14,17 @@ function makeRandomColor() {
 
 function SingleIframeExample() {
   const iframe = React.useRef(null);
-  const [color, setColor] = React.useState();
-  const [connection, setConnection] = React.useState();
+  const [color, setColor] = React.useState(null);
+  const [connection, setConnection] = React.useState(null);
 
   React.useEffect(() => {
     if (!iframe.current) return;
-    (async function () {
-      const _connection = await host.connect(iframe.current, {
+    (async () => {
+      const newConnection = await host.connect(iframe.current, {
         setColor,
       });
-      setConnection(_connection);
-    }());
+      setConnection(newConnection);
+    })();
   }, [iframe.current]);
 
   return (
@@ -32,7 +32,7 @@ function SingleIframeExample() {
 
       <div style={{ flex: 1 }}>
         <h1>HOST</h1>
-        <button onClick={() => connection.remote.setColor(makeRandomColor())}>
+        <button type="button" onClick={() => connection.remote.setColor(makeRandomColor())}>
           call iframe function
         </button>
       </div>
@@ -41,11 +41,12 @@ function SingleIframeExample() {
         <Iframe
           title="guest"
           ref={iframe}
-          src={"https://au-re.com/rimless/index.html"}
+          src="https://au-re.com/rimless/index.html"
           sandbox="allow-same-origin allow-scripts"
         />
       </div>
-    </Background>);
+    </Background>
+  );
 }
 
 export default SingleIframeExample;
