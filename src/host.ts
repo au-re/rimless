@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid";
+import { nanoid } from "nanoid";
 
 import { extractMethods, getOriginFromURL } from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
@@ -21,13 +21,11 @@ function isValidTarget(iframe: HTMLIFrameElement, event: any) {
  *
  * @param iframe
  * @param schema
- * @param options
  * @returns Promise
  */
 function connect(
   guest: HTMLIFrameElement | Worker,
-  schema: ISchema = {},
-  options?: any,
+  schema: ISchema = {}
 ): Promise<IConnection> {
   if (!guest) throw new Error("a target is required");
 
@@ -38,21 +36,31 @@ function connect(
   const listeners = guestIsWorker ? guest : window;
 
   return new Promise((resolve, reject) => {
-    const connectionID = uuidv4();
+    const connectionID = nanoid();
 
     // on handshake request
     function handleHandshake(event: any) {
-      if (!guestIsWorker && !isValidTarget(guest as HTMLIFrameElement, event)) return;
+      if (!guestIsWorker && !isValidTarget(guest as HTMLIFrameElement, event))
+        return;
       if (event.data.action !== actions.HANDSHAKE_REQUEST) return;
 
       // register local methods
       const localMethods = extractMethods(schema);
-      const unregisterLocal =
-        registerLocalMethods(schema, localMethods, connectionID, guestIsWorker ? (guest as Worker) : undefined);
+      const unregisterLocal = registerLocalMethods(
+        schema,
+        localMethods,
+        connectionID,
+        guestIsWorker ? (guest as Worker) : undefined
+      );
 
       // register remote methods
-      const { remote, unregisterRemote } =
-        registerRemoteMethods(event.data.schema, event.data.methods, connectionID, event, guestIsWorker ? (guest as Worker) : undefined);
+      const { remote, unregisterRemote } = registerRemoteMethods(
+        event.data.schema,
+        event.data.methods,
+        connectionID,
+        event,
+        guestIsWorker ? (guest as Worker) : undefined
+      );
 
       const payload = {
         action: actions.HANDSHAKE_REPLY,
@@ -83,6 +91,6 @@ function connect(
   });
 }
 
-export default ({
+export default {
   connect,
-});
+};

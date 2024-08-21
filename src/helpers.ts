@@ -16,7 +16,10 @@ export function isTrustedRemote(event: any) {
  * @param event
  */
 export function isWorker() {
-  return typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+  return (
+    typeof WorkerGlobalScope !== "undefined" &&
+    self instanceof WorkerGlobalScope
+  );
 }
 
 /**
@@ -37,7 +40,7 @@ export function extractMethods(obj: any) {
         paths.push(propPath);
       }
     });
-  }(obj));
+  })(obj);
   return paths;
 }
 
@@ -50,7 +53,6 @@ const ports: any = { "http:": "80", "https:": "443" };
  * @param url
  */
 export function getOriginFromURL(url: string | null) {
-
   const { location } = document;
 
   const regexResult = urlRegex.exec(url || "");

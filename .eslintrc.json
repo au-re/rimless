@@ -6,8 +6,8 @@
     "jest": true
   },
   "extends": [
-    "plugin:react/recommended",
-    "airbnb"
+    "airbnb",
+    "plugin:storybook/recommended"
   ],
   "globals": {
     "Atomics": "readonly",
@@ -22,7 +22,6 @@
     "sourceType": "module"
   },
   "plugins": [
-    "react",
     "@typescript-eslint"
   ],
   "settings": {
