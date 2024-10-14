@@ -13,7 +13,7 @@ export default defineConfig({
       formats: ["es", "iife"],
     },
     rollupOptions: {
-      external: ["lodash.get", "lodash.set", "nanoid"],
+      external: [],
       output: {
         dir: "lib",
       },

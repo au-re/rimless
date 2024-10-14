@@ -1,8 +1,7 @@
-import { nanoid } from "nanoid";
-
 import { extractMethods, getOriginFromURL } from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
-import { actions, events, IConnections, IConnection, ISchema } from "./types";
+import { actions, events, IConnection, IConnections, ISchema } from "./types";
+import { generateId } from "./utils";
 
 const connections: IConnections = {};
 
@@ -30,7 +29,7 @@ function connect(guest: HTMLIFrameElement | Worker, schema: ISchema = {}): Promi
   const listeners = guestIsWorker ? guest : window;
 
   return new Promise((resolve) => {
-    const connectionID = nanoid();
+    const connectionID = generateId();
 
     // on handshake request
     function handleHandshake(event: any) {

@@ -37,7 +37,7 @@ $ npm i -S rimless
 or from a CDN
 
 ```html
-<script src="https://unpkg.com/rimless/dist/rimless.min.js"></script>
+<script src="https://unpkg.com/rimless/lib/rimless.min.js"></script>
 ```
 
 ## Example Usage
