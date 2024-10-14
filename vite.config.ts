@@ -4,16 +4,19 @@ import dts from "vite-plugin-dts";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [dts()],
+  plugins: [dts({ insertTypesEntry: true, outDir: "lib" })],
   build: {
     lib: {
       entry: path.resolve(__dirname, "src/index.ts"),
       name: "rimless",
-      fileName: (format) => `index.${format}.js`,
+      fileName: (format) => (format === "iife" ? "rimless.min.js" : "rimless.js"),
+      formats: ["es", "iife"],
     },
     rollupOptions: {
-      external: ["lodash.get", "lodash.set", "nanoid"],
-      output: {},
+      external: [],
+      output: {
+        dir: "lib",
+      },
     },
     sourcemap: true,
     emptyOutDir: true,

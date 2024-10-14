@@ -1,9 +1,6 @@
-import get from "lodash.get";
-import set from "lodash.set";
-import { nanoid } from "nanoid";
-
 import { isTrustedRemote, isWorker } from "./helpers";
 import { actions, events, IRPCRequestPayload, IRPCResolvePayload, ISchema } from "./types";
+import { generateId, get, set } from "./utils";
 
 /**
  * for each function in the schema
@@ -85,7 +82,7 @@ export function createRPC(
 ) {
   return (...args: any) => {
     return new Promise((resolve, reject) => {
-      const callID = nanoid();
+      const callID = generateId();
 
       // on RPC response
       function handleResponse(event: any) {
