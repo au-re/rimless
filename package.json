@@ -15,7 +15,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
+    "lint": "eslint . --ignore-pattern '**/*.min.js'",
     "test": "vitest run",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
@@ -27,9 +27,9 @@
     "url": "https://github.com/au-re/rimless.git"
   },
   "dependencies": {
-    "lodash.get": "^4.4.2",
-    "lodash.set": "^4.3.2",
-    "nanoid": "^5.0.7"
+    "lodash.get": "^4.0.0",
+    "lodash.set": "^4.0.0",
+    "nanoid": "^5.0.0"
   },
   "peerDependencies": {
     "lodash.get": "^4.0.0",
@@ -37,7 +37,6 @@
     "nanoid": "^5.0.0"
   },
   "devDependencies": {
-    "vite-plugin-dts": "^4.2.4",
     "@chromatic-com/storybook": "^1.7.0",
     "@eslint/js": "^9.9.0",
     "@storybook/addon-essentials": "^8.2.9",
@@ -51,12 +50,14 @@
     "@types/lodash.get": "^4.4.9",
     "@types/lodash.set": "^4.3.9",
     "@vitejs/plugin-react": "^4.3.1",
-    "globals": "^15.9.0",
+    "eslint": "^9.12.0",
+    "globals": "^15.11.0",
     "happy-dom": "^15.7.4",
     "storybook": "^8.2.9",
     "typescript": "^5.5.3",
-    "typescript-eslint": "^8.0.1",
+    "typescript-eslint": "^8.8.1",
     "vite": "^5.4.1",
+    "vite-plugin-dts": "^4.2.4",
     "vitest": "^2.0.5"
   },
   "volta": {
