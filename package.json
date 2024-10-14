@@ -6,8 +6,8 @@
   "homepage": "https://github.com/au-re/rimless",
   "description": "event base communication made easy with a promise-based API wrapping `postMessage`",
   "type": "module",
-  "main": "lib/rimless.es.js",
-  "module": "lib/rimless.es.js",
+  "main": "lib/rimless.js",
+  "module": "lib/rimless.js",
   "types": "lib/index.d.ts",
   "files": [
     "lib"
