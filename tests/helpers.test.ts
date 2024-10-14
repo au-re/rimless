@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest";
 import { extractMethods, isTrustedRemote } from "../src/helpers";
 
 describe("extract functions", () => {
@@ -12,16 +13,16 @@ describe("extract functions", () => {
 
   const shallowFunctions = {
     bar: { baz: "value" },
-    baz: () => { },
-    foo: () => { },
+    baz: () => {},
+    foo: () => {},
   };
 
   const nestedFunctions = {
     foo: {
       bar: {
-        baz: () => { },
+        baz: () => {},
       },
-      foo: () => { },
+      foo: () => {},
     },
   };
 
@@ -30,11 +31,15 @@ describe("extract functions", () => {
   });
 
   it("correctly returns the path for shallow functions", () => {
-    expect(extractMethods(shallowFunctions).sort()).toEqual(["foo", "baz"].sort());
+    expect(extractMethods(shallowFunctions).sort()).toEqual(
+      ["foo", "baz"].sort()
+    );
   });
 
   it("correctly returns the path for nested functions", () => {
-    expect(extractMethods(nestedFunctions).sort()).toEqual(["foo.bar.baz", "foo.foo"].sort());
+    expect(extractMethods(nestedFunctions).sort()).toEqual(
+      ["foo.bar.baz", "foo.foo"].sort()
+    );
   });
 });
 
