@@ -3,13 +3,7 @@ import set from "lodash.set";
 import { nanoid } from "nanoid";
 
 import { isTrustedRemote, isWorker } from "./helpers";
-import {
-  actions,
-  events,
-  IRPCRequestPayload,
-  IRPCResolvePayload,
-  ISchema,
-} from "./types";
+import { actions, events, IRPCRequestPayload, IRPCResolvePayload, ISchema } from "./types";
 
 /**
  * for each function in the schema
@@ -30,13 +24,7 @@ export function registerLocalMethods(
   methods.forEach((methodName) => {
     // handle a remote calling a local method
     async function handleCall(event: any) {
-      const {
-        action,
-        callID,
-        connectionID,
-        callName,
-        args = [],
-      } = event.data as IRPCRequestPayload;
+      const { action, callID, connectionID, callName, args = [] } = event.data as IRPCRequestPayload;
 
       if (action !== actions.RPC_REQUEST) return;
       if (!isTrustedRemote(event)) return;
@@ -58,9 +46,7 @@ export function registerLocalMethods(
         const result = await get(schema, methodName)(...args);
         payload.result = JSON.parse(JSON.stringify(result));
       } catch (error) {
-        payload.error = JSON.parse(
-          JSON.stringify(error, Object.getOwnPropertyNames(error))
-        );
+        payload.error = JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
       }
 
       if (guest) guest.postMessage(payload);
@@ -103,8 +89,7 @@ export function createRPC(
 
       // on RPC response
       function handleResponse(event: any) {
-        const { callID, connectionID, callName, result, error, action } =
-          event.data as IRPCResolvePayload;
+        const { callID, connectionID, callName, result, error, action } = event.data as IRPCResolvePayload;
 
         if (!isTrustedRemote(event)) return;
         if (!callID || !callName) return;
@@ -127,9 +112,7 @@ export function createRPC(
 
       if (guest) guest.addEventListener(events.MESSAGE, handleResponse);
       else self.addEventListener(events.MESSAGE, handleResponse);
-      listeners.push(() =>
-        self.removeEventListener(events.MESSAGE, handleResponse)
-      );
+      listeners.push(() => self.removeEventListener(events.MESSAGE, handleResponse));
 
       if (guest) guest.postMessage(payload);
       else if (isWorker()) (self as any).postMessage(payload);

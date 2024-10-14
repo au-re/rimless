@@ -246,17 +246,6 @@ guest.connect({
 
 ---
 
-## Contributing
-
-We use the [airbnb style guide](https://github.com/airbnb/javascript) when writing javascript, with
-some minor modifications. Make sure eslint is installed and running before making changes, as it
-will ensure your coding style matches that of the project.
-
-We use [commitizen](https://github.com/commitizen/cz-cli) and
-[angular's conventional changelog](https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commits)
-to enforce a consistent commit format. When writing commits, make sure you run `npm run commit`
-instead of `git commit`.
-
 ## License
 
 [MIT](license-url)

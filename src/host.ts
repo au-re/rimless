@@ -23,15 +23,10 @@ function isValidTarget(iframe: HTMLIFrameElement, event: any) {
  * @param schema
  * @returns Promise
  */
-function connect(
-  guest: HTMLIFrameElement | Worker,
-  schema: ISchema = {}
-): Promise<IConnection> {
+function connect(guest: HTMLIFrameElement | Worker, schema: ISchema = {}): Promise<IConnection> {
   if (!guest) throw new Error("a target is required");
 
-  const guestIsWorker =
-    (guest as Worker).onerror !== undefined &&
-    (guest as Worker).onmessage !== undefined;
+  const guestIsWorker = (guest as Worker).onerror !== undefined && (guest as Worker).onmessage !== undefined;
   const listeners = guestIsWorker ? guest : window;
 
   return new Promise((resolve) => {
@@ -39,8 +34,7 @@ function connect(
 
     // on handshake request
     function handleHandshake(event: any) {
-      if (!guestIsWorker && !isValidTarget(guest as HTMLIFrameElement, event))
-        return;
+      if (!guestIsWorker && !isValidTarget(guest as HTMLIFrameElement, event)) return;
       if (event.data.action !== actions.HANDSHAKE_REQUEST) return;
 
       // register local methods

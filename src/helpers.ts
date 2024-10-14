@@ -16,10 +16,7 @@ export function isTrustedRemote(_event: any) {
  * @param event
  */
 export function isWorker() {
-  return (
-    typeof WorkerGlobalScope !== "undefined" &&
-    self instanceof WorkerGlobalScope
-  );
+  return typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
 }
 
 /**

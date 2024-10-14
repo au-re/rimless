@@ -17,11 +17,7 @@ function connect(schema: ISchema = {}): Promise<IConnection> {
       if (event.data.action !== actions.HANDSHAKE_REPLY) return;
 
       // register local methods
-      const unregisterLocal = registerLocalMethods(
-        schema,
-        localMethods,
-        event.data.connectionID
-      );
+      const unregisterLocal = registerLocalMethods(schema, localMethods, event.data.connectionID);
 
       // register remote methods
       const { remote, unregisterRemote } = registerRemoteMethods(

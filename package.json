@@ -27,9 +27,9 @@
     "url": "https://github.com/au-re/rimless.git"
   },
   "dependencies": {
-    "lodash.get": "^4.0.0",
-    "lodash.set": "^4.0.0",
-    "nanoid": "^5.0.0"
+    "lodash.get": "^4.4.2",
+    "lodash.set": "^4.3.2",
+    "nanoid": "^5.0.7"
   },
   "peerDependencies": {
     "lodash.get": "^4.0.0",
@@ -51,8 +51,6 @@
     "@types/lodash.get": "^4.4.9",
     "@types/lodash.set": "^4.3.9",
     "@vitejs/plugin-react": "^4.3.1",
-    "eslint": "^9.9.0",
-    "eslint-plugin-storybook": "^0.8.0",
     "globals": "^15.9.0",
     "happy-dom": "^15.7.4",
     "storybook": "^8.2.9",
