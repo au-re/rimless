@@ -12,12 +12,19 @@
 
 [![npm][npm-image]][npm-url]
 [![Commitizen friendly][commitizen-image]][commitizen-url]
+![npm bundle size](https://img.shields.io/bundlephobia/minzip/rimless)
 
 > Rimless makes event based communication easy with a promise-based API wrapping [postMessage](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage). Works with both **iframes** and **webworkers**.
 
 You can use `rimless` to call remote procedures, exchange data or expose local functions with **iframes**/**webworkers**.
 
-You can see it in action here https://au-re.github.io/rimless.
+You can see it in action in the code sandbox below:
+
+<a href="https://codesandbox.io/p/sandbox/3qrqfl">
+
+![CodeSandbox](https://img.shields.io/badge/Codesandbox-040404?style=for-the-badge&logo=codesandbox&logoColor=DBDBDB)
+
+</a>
 
 ## Installation
 
@@ -38,39 +45,42 @@ or from a CDN
 **in the host website**
 
 ```js
-import { host }  from "rimless";
+import { host } from "rimless";
 
 const connection = await host.connect(iframe, {
-  myVariable: 12,
-  myFunction: (value) => `hello ${value}`,
+  someHostVariable: 12,
+  someHostFunction: (value) => `hello ${value}`,
 });
 
 // access variables on the iframe
-console.log(connection.remote.myIframeVariable);  // 42
+console.log(connection.remote.someGuestVariable); // 42
 
 // call remote procedures on the iframe
-const result = await connection.remote.myIframeFunction("here");
-console.log(result);  // hello here
+const result = await connection.remote.someGuestFunction("here");
+
+console.log(result); // hello here
 
 // close the connection
 connection.close();
 ```
+
 **in the iframe**
 
 ```js
-import { guest }  from "rimless";
+import { guest } from "rimless";
 
 const connection = await guest.connect({
-  myIframeVariable: 42,
-  myIframeFunction: (value) => `hello ${value}`,
+  someGuestVariable: 42,
+  someGuestFunction: (value) => `hello ${value}`,
 });
 
 // access variables on the host
-console.log(connection.remote.myVariable); // 12
+console.log(connection.remote.someHostVariable); // 12
 
 // call remote procedures on host
-const res = await connection.remote.myFunction("there");
-console.log(res);   // hello there
+const res = await connection.remote.someHostFunction("there");
+
+console.log(res); // hello there
 
 // close the connection
 connection.close();
@@ -83,7 +93,7 @@ connection.close();
 This is how you can **connect your website** to an iframe or webworker:
 
 ```js
-import { host }  from "rimless";
+import { host } from "rimless";
 
 const iframe = document.getElementById("myIframe");
 const worker = new Worker("myWorker");
@@ -100,7 +110,7 @@ You also need to **connect your iframe/webworker** to the host website.
 Usage from an iframe:
 
 ```js
-import { guest }  from "rimless";
+import { guest } from "rimless";
 
 // connect to the parent website
 guest.connect();
@@ -122,7 +132,7 @@ guest.connect();
 To do anything meaningful with this connection you need to provide a schema that defines **the API** of the host/iframe/webworker. Any serializeable values as well as functions are ok to use. In the example below the host website provides a function that will update its background color when invoked.
 
 ```js
-import { host }  from "rimless";
+import { host } from "rimless";
 
 const api = {
   setColor: (color) => {
@@ -142,7 +152,7 @@ The api schema must be passed on connection, the same applies to the `iframe/web
 With the host API exposed we can now invoke the remote procedure from the iframe.
 
 ```js
-import { guest }  from "rimless";
+import { guest } from "rimless";
 
 // connect returns a promise that resolves in a connection object
 // `connection.remote` contains the api you can invoke
@@ -156,12 +166,13 @@ guest.connect().then((connection) => {
 Closing a connection will remove all event listeners that were registered.
 
 ```js
-import { guest }  from "rimless";
+import { guest } from "rimless";
 
 guest.connect().then((connection) => {
   connection.close();
 });
 ```
+
 ---
 
 ## How it Works
@@ -200,7 +211,7 @@ This library is inspired by [Postmate](https://www.npmjs.com/package/postmate) a
 
 ## API
 
-Rimless exports two objects: `host` and  `guest`.
+Rimless exports two objects: `host` and `guest`.
 
 > ### `host.connect`
 
@@ -208,16 +219,15 @@ Connect your website to a "guest" (iframe/webworker).
 
 ```js
 host.connect(iframe, {
-  log: (value) => console.log(value)
+  log: (value) => console.log(value),
 });
 ```
 
-| Name | Type | Description | Required |
-| --- | --- | --- | --- |
-| `guest` | `HTMLIFrameElement` or `Worker` | Target of the connection | required |
-| `schema` | `object` | schema of the api you want to expose | - |
-| `options` | `object` | - | - |
-
+| Name      | Type                            | Description                          | Required |
+| --------- | ------------------------------- | ------------------------------------ | -------- |
+| `guest`   | `HTMLIFrameElement` or `Worker` | Target of the connection             | required |
+| `schema`  | `object`                        | schema of the api you want to expose | -        |
+| `options` | `object`                        | -                                    | -        |
 
 > ### `guest.connect`
 
@@ -225,27 +235,16 @@ Connect a "guest" to your website. The guest connection automatically happens ba
 
 ```js
 guest.connect({
-  log: (value) => console.log(value)
+  log: (value) => console.log(value),
 });
 ```
 
-| Name | Type | Description | Default |
-| --- | --- | --- | --- |
-| `schema` | `object` | schema of the api you want to expose | - |
-| `options` | `object` | - | - |
+| Name      | Type     | Description                          | Default |
+| --------- | -------- | ------------------------------------ | ------- |
+| `schema`  | `object` | schema of the api you want to expose | -       |
+| `options` | `object` | -                                    | -       |
 
 ---
-
-## Contributing
-
-We use the [airbnb style guide](https://github.com/airbnb/javascript) when writing javascript, with
-some minor modifications. Make sure eslint is installed and running before making changes, as it
-will ensure your coding style matches that of the project.
-
-We use [commitizen](https://github.com/commitizen/cz-cli) and
-[angular's conventional changelog](https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commits)
-to enforce a consistent commit format. When writing commits, make sure you run `npm run commit`
-instead of `git commit`.
 
 ## License
 

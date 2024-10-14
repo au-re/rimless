@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid";
+import { nanoid } from "nanoid";
 
 import { extractMethods, getOriginFromURL } from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
@@ -21,24 +21,16 @@ function isValidTarget(iframe: HTMLIFrameElement, event: any) {
  *
  * @param iframe
  * @param schema
- * @param options
  * @returns Promise
  */
-function connect(
-  guest: HTMLIFrameElement | Worker,
-  schema: ISchema = {},
-  options?: any,
-): Promise<IConnection> {
+function connect(guest: HTMLIFrameElement | Worker, schema: ISchema = {}): Promise<IConnection> {
   if (!guest) throw new Error("a target is required");
 
-  // this check should be improved
-  const guestIsWorker =
-    (guest as Worker).onerror !== undefined &&
-    (guest as Worker).onmessage !== undefined;
+  const guestIsWorker = (guest as Worker).onerror !== undefined && (guest as Worker).onmessage !== undefined;
   const listeners = guestIsWorker ? guest : window;
 
-  return new Promise((resolve, reject) => {
-    const connectionID = uuidv4();
+  return new Promise((resolve) => {
+    const connectionID = nanoid();
 
     // on handshake request
     function handleHandshake(event: any) {
@@ -47,12 +39,21 @@ function connect(
 
       // register local methods
       const localMethods = extractMethods(schema);
-      const unregisterLocal =
-        registerLocalMethods(schema, localMethods, connectionID, guestIsWorker ? (guest as Worker) : undefined);
+      const unregisterLocal = registerLocalMethods(
+        schema,
+        localMethods,
+        connectionID,
+        guestIsWorker ? (guest as Worker) : undefined
+      );
 
       // register remote methods
-      const { remote, unregisterRemote } =
-        registerRemoteMethods(event.data.schema, event.data.methods, connectionID, event, guestIsWorker ? (guest as Worker) : undefined);
+      const { remote, unregisterRemote } = registerRemoteMethods(
+        event.data.schema,
+        event.data.methods,
+        connectionID,
+        event,
+        guestIsWorker ? (guest as Worker) : undefined
+      );
 
       const payload = {
         action: actions.HANDSHAKE_REPLY,
@@ -83,6 +84,6 @@ function connect(
   });
 }
 
-export default ({
+export default {
   connect,
-});
+};

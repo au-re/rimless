@@ -1,6 +1,6 @@
 import get from "lodash.get";
 import set from "lodash.set";
-import { v4 as uuidv4 } from "uuid";
+import { nanoid } from "nanoid";
 
 import { isTrustedRemote, isWorker } from "./helpers";
 import { actions, events, IRPCRequestPayload, IRPCResolvePayload, ISchema } from "./types";
@@ -18,20 +18,13 @@ export function registerLocalMethods(
   schema: ISchema = {},
   methods: any[] = [],
   _connectionID: string,
-  guest?: Worker): any {
-
+  guest?: Worker
+): any {
   const listeners: any[] = [];
   methods.forEach((methodName) => {
-
     // handle a remote calling a local method
     async function handleCall(event: any) {
-      const {
-        action,
-        callID,
-        connectionID,
-        callName,
-        args = [],
-      } = event.data as IRPCRequestPayload;
+      const { action, callID, connectionID, callName, args = [] } = event.data as IRPCRequestPayload;
 
       if (action !== actions.RPC_REQUEST) return;
       if (!isTrustedRemote(event)) return;
@@ -88,21 +81,15 @@ export function createRPC(
   _connectionID: string,
   event: any,
   listeners: Array<() => void> = [],
-  guest?: Worker) {
-
+  guest?: Worker
+) {
   return (...args: any) => {
     return new Promise((resolve, reject) => {
-      const callID = uuidv4();
+      const callID = nanoid();
 
       // on RPC response
       function handleResponse(event: any) {
-        const {
-          callID,
-          connectionID,
-          callName,
-          result,
-          error,
-          action } = event.data as IRPCResolvePayload;
+        const { callID, connectionID, callName, result, error, action } = event.data as IRPCResolvePayload;
 
         if (!isTrustedRemote(event)) return;
         if (!callID || !callName) return;
@@ -149,8 +136,8 @@ export function registerRemoteMethods(
   methods: any[] = [],
   _connectionID: string,
   event: any,
-  guest?: Worker) {
-
+  guest?: Worker
+) {
   const remote = { ...schema };
   const listeners: Array<() => void> = [];
 
@@ -159,5 +146,8 @@ export function registerRemoteMethods(
     set(remote, methodName, rpc);
   });
 
-  return { remote, unregisterRemote: () => listeners.forEach((unregister) => unregister()) };
+  return {
+    remote,
+    unregisterRemote: () => listeners.forEach((unregister) => unregister()),
+  };
 }

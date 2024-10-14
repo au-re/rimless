@@ -1,7 +1,8 @@
 import React from "react";
-import { Background, Iframe } from "./Components";
+import template from "./iframe.html?raw";
 
 import { host } from "../../src/index";
+import { IConnection } from "../../src/types";
 
 function makeRandomColor() {
   const letters = "0123456789ABCDEF";
@@ -13,13 +14,13 @@ function makeRandomColor() {
 }
 
 function SingleIframeExample() {
-  const iframe = React.useRef(null);
-  const [color, setColor] = React.useState(null);
-  const [connection, setConnection] = React.useState(null);
+  const iframe = React.useRef<HTMLIFrameElement | null>(null);
+  const [color, setColor] = React.useState("#fff");
+  const [connection, setConnection] = React.useState<IConnection | null>(null);
 
   React.useEffect(() => {
-    if (!iframe.current) return;
     (async () => {
+      if (!iframe?.current) return;
       const newConnection = await host.connect(iframe.current, {
         setColor,
       });
@@ -28,24 +29,34 @@ function SingleIframeExample() {
   }, [iframe.current]);
 
   return (
-    <Background style={{ background: color }}>
-
+    <div style={{ background: color }}>
       <div style={{ flex: 1 }}>
         <h1>HOST</h1>
-        <button type="button" onClick={() => connection.remote.setColor(makeRandomColor())}>
+        {connection ? <div>Connected</div> : <div>Connecting...</div>}
+        <button
+          type="button"
+          onClick={() => {
+            console.log(connection);
+            connection?.remote.setColor(makeRandomColor());
+          }}
+        >
           call iframe function
         </button>
       </div>
-
       <div style={{ marginTop: "1rem" }}>
-        <Iframe
+        <iframe
+          style={{
+            height: "240px",
+            width: "240px",
+            border: "1px solid #FFF",
+          }}
           title="guest"
           ref={iframe}
-          src="https://au-re.com/rimless/index.html"
+          srcDoc={template}
           sandbox="allow-same-origin allow-scripts"
         />
       </div>
-    </Background>
+    </div>
   );
 }
 

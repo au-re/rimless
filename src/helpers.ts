@@ -5,7 +5,7 @@ export const CONNECTION_TIMEOUT = 1000;
  *
  * @param event
  */
-export function isTrustedRemote(event: any) {
+export function isTrustedRemote(_event: any) {
   // TODO: implement
   return true;
 }
@@ -37,7 +37,7 @@ export function extractMethods(obj: any) {
         paths.push(propPath);
       }
     });
-  }(obj));
+  })(obj);
   return paths;
 }
 
@@ -50,7 +50,6 @@ const ports: any = { "http:": "80", "https:": "443" };
  * @param url
  */
 export function getOriginFromURL(url: string | null) {
-
   const { location } = document;
 
   const regexResult = urlRegex.exec(url || "");

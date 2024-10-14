@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest";
 import { extractMethods, isTrustedRemote } from "../src/helpers";
 
 describe("extract functions", () => {
@@ -12,16 +13,16 @@ describe("extract functions", () => {
 
   const shallowFunctions = {
     bar: { baz: "value" },
-    baz: () => { },
-    foo: () => { },
+    baz: () => {},
+    foo: () => {},
   };
 
   const nestedFunctions = {
     foo: {
       bar: {
-        baz: () => { },
+        baz: () => {},
       },
-      foo: () => { },
+      foo: () => {},
     },
   };
 

@@ -1,28 +1,7 @@
 {
-  "compilerOptions": {
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    "declaration": true,
-    "target": "esnext",
-    "module": "esnext",
-    "sourceMap": true,
-    "rootDir": "./src",
-    "outDir": "./lib",
-    "strict": true,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "types": [
-      "jest",
-      "lodash.get",
-      "lodash.set",
-      "uuid"
-    ]
-  },
-  "include": [
-    "src"
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
   ]
 }
