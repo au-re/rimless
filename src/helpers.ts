@@ -5,7 +5,7 @@ export const CONNECTION_TIMEOUT = 1000;
  *
  * @param event
  */
-export function isTrustedRemote(event: any) {
+export function isTrustedRemote(_event: any) {
   // TODO: implement
   return true;
 }

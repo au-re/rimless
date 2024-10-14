@@ -6,24 +6,38 @@
   "homepage": "https://au-re.github.io/rimless",
   "description": "event base communication made easy with a promise-based API wrapping `postMessage`",
   "type": "module",
+  "main": "dist/index.umd.js",
+  "module": "dist/index.es.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "test": "vitest run",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "visualize-bundle": "npx vite-bundle-visualizer"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/au-re/rimless.git"
   },
   "dependencies": {
-    "lodash.get": "^4.4.2",
-    "lodash.set": "^4.3.2",
-    "nanoid": "^5.0.7"
+    "lodash.get": "^4.0.0",
+    "lodash.set": "^4.0.0",
+    "nanoid": "^5.0.0"
+  },
+  "peerDependencies": {
+    "lodash.get": "^4.0.0",
+    "lodash.set": "^4.0.0",
+    "nanoid": "^5.0.0"
   },
   "devDependencies": {
+    "vite-plugin-dts": "^4.2.4",
     "@chromatic-com/storybook": "^1.7.0",
     "@eslint/js": "^9.9.0",
     "@storybook/addon-essentials": "^8.2.9",
@@ -40,9 +54,14 @@
     "eslint": "^9.9.0",
     "eslint-plugin-storybook": "^0.8.0",
     "globals": "^15.9.0",
+    "happy-dom": "^15.7.4",
     "storybook": "^8.2.9",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
-    "vite": "^5.4.1"
+    "vite": "^5.4.1",
+    "vitest": "^2.0.5"
+  },
+  "volta": {
+    "node": "18.19.0"
   }
 }

@@ -29,13 +29,12 @@ function connect(
 ): Promise<IConnection> {
   if (!guest) throw new Error("a target is required");
 
-  // this check should be improved
   const guestIsWorker =
     (guest as Worker).onerror !== undefined &&
     (guest as Worker).onmessage !== undefined;
   const listeners = guestIsWorker ? guest : window;
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const connectionID = nanoid();
 
     // on handshake request

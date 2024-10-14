@@ -1,0 +1,15 @@
+name: Test and build when pushing to a branch
+on: push
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: "--max_old_space_size=4096"
+    steps:
+      - uses: actions/checkout@v2
+      - name: install monorepo dependencies
+        run: npm ci
+      - name: build monorepo packages
+        run: npm run build
+      - name: test monorepo
+        run: npm run test

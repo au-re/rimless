@@ -2,7 +2,7 @@ import { extractMethods, isWorker } from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
 import { actions, events, IConnection, ISchema } from "./types";
 
-const REQUEST_INTERVAL = 600;
+const REQUEST_INTERVAL = 10;
 const TIMEOUT_INTERVAL = 3000;
 
 let interval: any = null;
