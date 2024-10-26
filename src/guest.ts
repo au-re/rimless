@@ -1,6 +1,6 @@
 import { extractMethods, isWorker } from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
-import { actions, events, IConnection, ISchema } from "./types";
+import { actions, EventHandlers, events, IConnection, ISchema } from "./types";
 
 const REQUEST_INTERVAL = 10;
 const TIMEOUT_INTERVAL = 3000;
@@ -8,12 +8,12 @@ const TIMEOUT_INTERVAL = 3000;
 let interval: any = null;
 let connected = false;
 
-function connect(schema: ISchema = {}): Promise<IConnection> {
+function connect(schema: ISchema = {}, eventHandlers?: EventHandlers): Promise<IConnection> {
   return new Promise((resolve, reject) => {
     const localMethods = extractMethods(schema);
 
     // on handshake response
-    function handleHandshakeResponse(event: any) {
+    async function handleHandshakeResponse(event: any) {
       if (event.data.action !== actions.HANDSHAKE_REPLY) return;
 
       // register local methods
@@ -26,6 +26,8 @@ function connect(schema: ISchema = {}): Promise<IConnection> {
         event.data.connectionID,
         event
       );
+
+      await eventHandlers?.onConnectionSetup?.(remote);
 
       // close the connection and all listeners when called
       const close = () => {

@@ -59,3 +59,7 @@ export interface IRPCResolvePayload {
   callName: string;
   connectionID: string;
 }
+
+export interface EventHandlers {
+  onConnectionSetup: (remote: ISchema) => Promise<void>;
+}

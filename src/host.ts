@@ -70,6 +70,7 @@ function connect(guest: HTMLIFrameElement | Worker, schema: ISchema = {}): Promi
         listeners.removeEventListener(events.MESSAGE, handleHandshake);
         unregisterRemote();
         unregisterLocal();
+        if (guestIsWorker) (guest as Worker).terminate();
       };
 
       // resolve connection object
