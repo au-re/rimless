@@ -20,7 +20,7 @@ export interface IConnection {
 }
 
 export interface IConnections {
-  [connectionID: string]: ISchema;
+  [connectionID: string]: IConnection;
 }
 
 export interface IEvent extends EventListener {

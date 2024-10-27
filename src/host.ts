@@ -1,7 +1,6 @@
-import { extractMethods, getOriginFromURL } from "./helpers";
+import { extractMethods, generateId, getOriginFromURL } from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
 import { actions, events, IConnection, IConnections, ISchema } from "./types";
-import { generateId } from "./utils";
 
 const connections: IConnections = {};
 
@@ -73,14 +72,20 @@ function connect(guest: HTMLIFrameElement | Worker, schema: ISchema = {}): Promi
         if (guestIsWorker) (guest as Worker).terminate();
       };
 
-      // resolve connection object
       const connection: IConnection = { remote, close };
       connections[connectionID] = connection;
-      return resolve(connection);
     }
 
     // subscribe to HANDSHAKE MESSAGES
     listeners.addEventListener(events.MESSAGE, handleHandshake);
+
+    // on handshake reply
+    function handleHandshakeReply(event: any) {
+      if (event.data.action !== actions.HANDSHAKE_REPLY) return;
+      return resolve(connections[event.data.connectionID]);
+    }
+
+    listeners.addEventListener(events.MESSAGE, handleHandshakeReply);
   });
 }
 

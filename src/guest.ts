@@ -2,14 +2,8 @@ import { extractMethods, isWorker } from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
 import { actions, EventHandlers, events, IConnection, ISchema } from "./types";
 
-const REQUEST_INTERVAL = 10;
-const TIMEOUT_INTERVAL = 3000;
-
-let interval: any = null;
-let connected = false;
-
 function connect(schema: ISchema = {}, eventHandlers?: EventHandlers): Promise<IConnection> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const localMethods = extractMethods(schema);
 
     // on handshake response
@@ -29,14 +23,21 @@ function connect(schema: ISchema = {}, eventHandlers?: EventHandlers): Promise<I
 
       await eventHandlers?.onConnectionSetup?.(remote);
 
+      // send a HANDSHAKE REPLY to the host
+      const payload = {
+        action: actions.HANDSHAKE_REPLY,
+        connectionID: event.data.connectionID,
+      };
+
+      if (isWorker()) self.postMessage(payload);
+      else window.parent.postMessage(payload, "*");
+
       // close the connection and all listeners when called
       const close = () => {
         self.removeEventListener(events.MESSAGE, handleHandshakeResponse);
         unregisterRemote();
         unregisterLocal();
       };
-
-      connected = true;
 
       // resolve connection object
       const connection = { remote, close };
@@ -52,18 +53,8 @@ function connect(schema: ISchema = {}, eventHandlers?: EventHandlers): Promise<I
       schema: JSON.parse(JSON.stringify(schema)),
     };
 
-    interval = setInterval(() => {
-      if (connected) return clearInterval(interval);
-
-      // publish the HANDSHAKE REQUEST
-      if (isWorker()) (self as any).postMessage(payload);
-      else window.parent.postMessage(payload, "*");
-    }, REQUEST_INTERVAL);
-
-    // timeout the connection after a time
-    setTimeout(() => {
-      if (!connected) reject("connection timeout");
-    }, TIMEOUT_INTERVAL);
+    if (isWorker()) (self as any).postMessage(payload);
+    else window.parent.postMessage(payload, "*");
   });
 }
 

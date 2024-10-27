@@ -1,11 +1,12 @@
 import { Meta } from "@storybook/blocks";
 import SingleIframeExample from "./examples/SingleIframeExample";
+import WorkerExample from "./examples/WorkerExample";
 
 <Meta title="Getting Started" />
 
 # Rimless
 
-Rimless makes event based communication easy with a promise-based API wrapping [postMessage](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage). 
+Rimless makes event based communication easy with a promise-based API wrapping [postMessage](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage).
 
 Rimless works with both **iframes** and **webworkers**.
 
@@ -18,3 +19,7 @@ In the example below you can invoke remote procedures from an iframe to the host
 versa.
 
 <SingleIframeExample />
+
+## RPCs on Web webworkers
+
+<WorkerExample />
