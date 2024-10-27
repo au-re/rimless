@@ -20,7 +20,7 @@ export interface IConnection {
 }
 
 export interface IConnections {
-  [connectionID: string]: ISchema;
+  [connectionID: string]: IConnection;
 }
 
 export interface IEvent extends EventListener {
@@ -58,4 +58,8 @@ export interface IRPCResolvePayload {
   callID: string;
   callName: string;
   connectionID: string;
+}
+
+export interface EventHandlers {
+  onConnectionSetup: (remote: ISchema) => Promise<void>;
 }

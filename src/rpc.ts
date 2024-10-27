@@ -1,6 +1,5 @@
-import { isTrustedRemote, isWorker } from "./helpers";
+import { generateId, get, isWorker, set } from "./helpers";
 import { actions, events, IRPCRequestPayload, IRPCResolvePayload, ISchema } from "./types";
-import { generateId, get, set } from "./utils";
 
 /**
  * for each function in the schema
@@ -24,7 +23,6 @@ export function registerLocalMethods(
       const { action, callID, connectionID, callName, args = [] } = event.data as IRPCRequestPayload;
 
       if (action !== actions.RPC_REQUEST) return;
-      if (!isTrustedRemote(event)) return;
       if (!callID || !callName) return;
       if (callName !== methodName) return;
       if (connectionID !== _connectionID) return;
@@ -43,6 +41,7 @@ export function registerLocalMethods(
         const result = await get(schema, methodName)(...args);
         payload.result = JSON.parse(JSON.stringify(result));
       } catch (error) {
+        payload.action = actions.RPC_REJECT;
         payload.error = JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
       }
 
@@ -88,7 +87,6 @@ export function createRPC(
       function handleResponse(event: any) {
         const { callID, connectionID, callName, result, error, action } = event.data as IRPCResolvePayload;
 
-        if (!isTrustedRemote(event)) return;
         if (!callID || !callName) return;
         if (callName !== _callName) return;
         if (connectionID !== _connectionID) return;
