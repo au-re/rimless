@@ -1,4 +1,4 @@
-import { extractMethods, generateId, getOriginFromURL } from "./helpers";
+import { extractMethods, generateId, getOriginFromURL, isNodeEnv } from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
 import { actions, events, IConnection, IConnections, ISchema } from "./types";
 
@@ -25,14 +25,14 @@ function connect(guest: HTMLIFrameElement | Worker, schema: ISchema = {}): Promi
   if (!guest) throw new Error("a target is required");
 
   const guestIsWorker = (guest as Worker).onerror !== undefined && (guest as Worker).onmessage !== undefined;
-  const listeners = guestIsWorker ? guest : window;
+  const listeners = guestIsWorker || isNodeEnv() ? guest : window;
 
   return new Promise((resolve) => {
     const connectionID = generateId();
 
     // on handshake request
     function handleHandshake(event: any) {
-      if (!guestIsWorker && !isValidTarget(guest as HTMLIFrameElement, event)) return;
+      if (!guestIsWorker && !isNodeEnv() && !isValidTarget(guest as HTMLIFrameElement, event)) return;
       if (event.data.action !== actions.HANDSHAKE_REQUEST) return;
 
       // register local methods
@@ -41,7 +41,7 @@ function connect(guest: HTMLIFrameElement | Worker, schema: ISchema = {}): Promi
         schema,
         localMethods,
         connectionID,
-        guestIsWorker ? (guest as Worker) : undefined
+        guestIsWorker || isNodeEnv() ? (guest as Worker) : undefined
       );
 
       // register remote methods
@@ -50,7 +50,7 @@ function connect(guest: HTMLIFrameElement | Worker, schema: ISchema = {}): Promi
         event.data.methods,
         connectionID,
         event,
-        guestIsWorker ? (guest as Worker) : undefined
+        guestIsWorker || isNodeEnv() ? (guest as Worker) : undefined
       );
 
       const payload = {
