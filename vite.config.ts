@@ -21,4 +21,7 @@ export default defineConfig({
     sourcemap: true,
     emptyOutDir: true,
   },
+  optimizeDeps: {
+    exclude: ['./docs/examples/iframe.html']
+  }
 });
