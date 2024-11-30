@@ -1,13 +1,4 @@
-import {
-  generateId,
-  get,
-  isNodeEnv,
-  isWorker,
-  set,
-  addEventListener,
-  removeEventListener,
-  getEventData,
-} from "./helpers";
+import { generateId, get, isNodeEnv, isWorker, set, addEventListener, removeEventListener, getEventData } from "./helpers";
 import { actions, events, IRPCRequestPayload, IRPCResolvePayload, ISchema } from "./types";
 
 /**
