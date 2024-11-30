@@ -1,4 +1,4 @@
-import { generateId, get, isNodeEnv, isWorker, set } from "./helpers";
+import { generateId, get, isNodeEnv, isWorker, set, addEventListener, removeEventListener, getEventData } from "./helpers";
 import { actions, events, IRPCRequestPayload, IRPCResolvePayload, ISchema } from "./types";
 
 /**
@@ -20,7 +20,8 @@ export function registerLocalMethods(
   methods.forEach((methodName) => {
     // handle a remote calling a local method
     async function handleCall(event: any) {
-      const { action, callID, connectionID, callName, args = [] } = event.data as IRPCRequestPayload;
+      const eventData = getEventData(event);
+      const { action, callID, connectionID, callName, args = [] } = eventData as IRPCRequestPayload;
 
       if (action !== actions.RPC_REQUEST) return;
       if (!callID || !callName) return;
@@ -51,10 +52,13 @@ export function registerLocalMethods(
     }
 
     // subscribe to the call event
-    if (guest) guest.addEventListener(events.MESSAGE, handleCall);
-    else self.addEventListener(events.MESSAGE, handleCall);
-
-    listeners.push(() => self.removeEventListener(events.MESSAGE, handleCall));
+    if (guest) {
+      addEventListener(guest, events.MESSAGE, handleCall);
+      listeners.push(() => removeEventListener(guest, events.MESSAGE, handleCall));
+    } else {
+      addEventListener(self, events.MESSAGE, handleCall);
+      listeners.push(() => removeEventListener(self, events.MESSAGE, handleCall));
+    }
   });
 
   return () => listeners.forEach((unregister) => unregister());
@@ -85,7 +89,8 @@ export function createRPC(
 
       // on RPC response
       function handleResponse(event: any) {
-        const { callID, connectionID, callName, result, error, action } = event.data as IRPCResolvePayload;
+        const eventData = getEventData(event);
+        const { callID, connectionID, callName, result, error, action } = eventData as IRPCResolvePayload;
 
         if (!callID || !callName) return;
         if (callName !== _callName) return;
@@ -105,12 +110,12 @@ export function createRPC(
         connectionID: _connectionID,
       };
 
-      if (guest || isNodeEnv()) {
-        guest?.addEventListener(events.MESSAGE, handleResponse);
-        listeners.push(() => guest?.removeEventListener(events.MESSAGE, handleResponse));
+      if (guest) {
+        addEventListener(guest, events.MESSAGE, handleResponse);
+        listeners.push(() => removeEventListener(guest, events.MESSAGE, handleResponse));
       } else {
-        self.addEventListener(events.MESSAGE, handleResponse);
-        listeners.push(() => self.removeEventListener(events.MESSAGE, handleResponse));
+        addEventListener(self, events.MESSAGE, handleResponse);
+        listeners.push(() => removeEventListener(self, events.MESSAGE, handleResponse));
       }
 
       if (guest) guest.postMessage(payload);
