@@ -39,7 +39,7 @@ export function registerLocalMethods(
       // run function and return the results to the remote
       try {
         const result = await get(schema, methodName)(...args);
-        payload.result = JSON.parse(JSON.stringify(result));
+        payload.result = JSON.parse(JSON.stringify(result || {}));
       } catch (error) {
         payload.action = actions.RPC_REJECT;
         payload.error = JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
