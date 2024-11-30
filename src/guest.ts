@@ -1,4 +1,4 @@
-import { extractMethods, isWorker } from "./helpers";
+import { extractMethods, getEventData, isWorker } from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
 import { actions, EventHandlers, events, IConnection, ISchema } from "./types";
 
@@ -8,16 +8,17 @@ function connect(schema: ISchema = {}, eventHandlers?: EventHandlers): Promise<I
 
     // on handshake response
     async function handleHandshakeResponse(event: any) {
-      if (event.data.action !== actions.HANDSHAKE_REPLY) return;
+      const eventData = getEventData(event);
+      if (eventData?.action !== actions.HANDSHAKE_REPLY) return;
 
       // register local methods
-      const unregisterLocal = registerLocalMethods(schema, localMethods, event.data.connectionID);
+      const unregisterLocal = registerLocalMethods(schema, localMethods, eventData.connectionID);
 
       // register remote methods
       const { remote, unregisterRemote } = registerRemoteMethods(
-        event.data.schema,
-        event.data.methods,
-        event.data.connectionID,
+        eventData.schema,
+        eventData.methods,
+        eventData.connectionID,
         event
       );
 
@@ -26,7 +27,7 @@ function connect(schema: ISchema = {}, eventHandlers?: EventHandlers): Promise<I
       // send a HANDSHAKE REPLY to the host
       const payload = {
         action: actions.HANDSHAKE_REPLY,
-        connectionID: event.data.connectionID,
+        connectionID: eventData.connectionID,
       };
 
       if (isWorker()) self.postMessage(payload);

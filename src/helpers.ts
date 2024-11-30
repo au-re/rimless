@@ -1,5 +1,3 @@
-export const CONNECTION_TIMEOUT = 1000;
-
 /**
  * check if run in a webworker
  *
@@ -109,3 +107,57 @@ export function generateId(length: number = 10): string {
   }
   return result;
 }
+
+export interface NodeWorker {
+  on(event: string, handler: any): void;
+  off(event: string, handler: any): void;
+  postMessage(message: any): void;
+  terminate(): void;
+}
+
+// Type that captures common properties between Web Workers and Node Workers
+export type WorkerLike = Worker | NodeWorker;
+
+let NodeWorkerClass: any = null;
+
+if (isNodeEnv()) {
+  try {
+    const workerThreads = require('worker_threads');
+    NodeWorkerClass = workerThreads.Worker;
+  } catch {
+  }
+}
+
+export function isNodeWorker(target: any): target is NodeWorker {
+  return NodeWorkerClass !== null && target instanceof NodeWorkerClass;
+}
+
+export function isWorkerLike(target: any): target is WorkerLike {
+  return isNodeWorker(target) || target instanceof Worker;
+}
+
+export function addEventListener(target: Window | WorkerLike | HTMLIFrameElement, event: string, handler: any) {
+  if (isNodeWorker(target)) {
+    target.on(event, handler);
+  } else if ('addEventListener' in target) {
+    target.addEventListener(event, handler);
+  }
+}
+
+export function removeEventListener(target: Window | WorkerLike | HTMLIFrameElement, event: string, handler: any) {
+  if (isNodeWorker(target)) {
+    target.off(event, handler);
+  } else if ('removeEventListener' in target) {
+    target.removeEventListener(event, handler);
+  }
+}
+
+/**
+ * Normalize message event data across Web and Node.js environments
+ * In web, data is in event.data
+ * In Node.js, the event itself contains the data
+ */
+export function getEventData(event: any): any {
+  return event.data || event;
+}
+
