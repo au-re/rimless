@@ -4,7 +4,6 @@
 <head>
   <meta charset="utf-8">
   <title>Rimless Guest</title>
-  <script src="../../lib/rimless.min.js"></script>
   <style>
     html,
     body {
@@ -54,8 +53,8 @@
     <button id="btn">call host function</button>
   </div>
 
-  <script>
-    const { guest } = rimless;
+  <script type="module">
+    import { guest } from "/src/index.ts";
 
     function makeRandomColor() {
       const letters = "0123456789ABCDEF";

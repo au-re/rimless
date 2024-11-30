@@ -1,4 +1,4 @@
-import { generateId, get, isWorker, set } from "./helpers";
+import { generateId, get, isNodeEnv, isWorker, set } from "./helpers";
 import { actions, events, IRPCRequestPayload, IRPCResolvePayload, ISchema } from "./types";
 
 /**
@@ -105,12 +105,16 @@ export function createRPC(
         connectionID: _connectionID,
       };
 
-      if (guest) guest.addEventListener(events.MESSAGE, handleResponse);
-      else self.addEventListener(events.MESSAGE, handleResponse);
-      listeners.push(() => self.removeEventListener(events.MESSAGE, handleResponse));
+      if (guest || isNodeEnv()) {
+        guest?.addEventListener(events.MESSAGE, handleResponse);
+        listeners.push(() => guest?.removeEventListener(events.MESSAGE, handleResponse));
+      } else {
+        self.addEventListener(events.MESSAGE, handleResponse);
+        listeners.push(() => self.removeEventListener(events.MESSAGE, handleResponse));
+      }
 
       if (guest) guest.postMessage(payload);
-      else if (isWorker()) (self as any).postMessage(payload);
+      else if (isWorker() || isNodeEnv()) (self as any).postMessage(payload);
       else (event.source || event.target).postMessage(payload, event.origin);
     });
   };

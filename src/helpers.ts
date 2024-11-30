@@ -1,5 +1,3 @@
-export const CONNECTION_TIMEOUT = 1000;
-
 /**
  * check if run in a webworker
  *
@@ -7,6 +5,13 @@ export const CONNECTION_TIMEOUT = 1000;
  */
 export function isWorker(): boolean {
   return typeof window === "undefined" && typeof self !== "undefined";
+}
+
+/**
+ * check if run in a Node.js environment
+ */
+export function isNodeEnv(): boolean {
+  return typeof window === "undefined";
 }
 
 /**
@@ -40,34 +45,19 @@ const ports: any = { "http:": "80", "https:": "443" };
  * @param url
  */
 export function getOriginFromURL(url: string | null) {
-  const { location } = document;
+  if (!url) return null;
 
-  const regexResult = urlRegex.exec(url || "");
-  let protocol;
-  let hostname;
-  let port;
+  const regexResult = urlRegex.exec(url);
+  if (!regexResult) return null;
 
-  if (regexResult) {
-    // It's an absolute URL. Use the parsed info.
-    // regexResult[1] will be undefined if the URL starts with //
-    [, protocol = location.protocol, hostname, , port] = regexResult;
-  } else {
-    // It's a relative path. Use the current location's info.
-    protocol = location.protocol;
-    hostname = location.hostname;
-    port = location.port;
-  }
+  const [, protocol = "http:", hostname, , port] = regexResult;
 
-  // If the protocol is file, the origin is "null"
-  // The origin of a document with file protocol is an opaque origin
-  // and its serialization "null" [1]
-  // [1] https://html.spec.whatwg.org/multipage/origin.html#origin
+  // If the protocol is file, return file://
   if (protocol === "file:") {
-    return "null";
+    return "file://";
   }
 
   // If the port is the default for the protocol, we don't want to add it to the origin string
-  // or it won't match the message's event.origin.
   const portSuffix = port && port !== ports[protocol] ? `:${port}` : "";
   return `${protocol}//${hostname}${portSuffix}`;
 }
@@ -117,3 +107,57 @@ export function generateId(length: number = 10): string {
   }
   return result;
 }
+
+export interface NodeWorker {
+  on(event: string, handler: any): void;
+  off(event: string, handler: any): void;
+  postMessage(message: any): void;
+  terminate(): void;
+}
+
+// Type that captures common properties between Web Workers and Node Workers
+export type WorkerLike = Worker | NodeWorker;
+
+let NodeWorkerClass: any = null;
+
+if (isNodeEnv()) {
+  try {
+    const workerThreads = require('worker_threads');
+    NodeWorkerClass = workerThreads.Worker;
+  } catch {
+  }
+}
+
+export function isNodeWorker(target: any): target is NodeWorker {
+  return NodeWorkerClass !== null && target instanceof NodeWorkerClass;
+}
+
+export function isWorkerLike(target: any): target is WorkerLike {
+  return isNodeWorker(target) || target instanceof Worker;
+}
+
+export function addEventListener(target: Window | WorkerLike | HTMLIFrameElement, event: string, handler: any) {
+  if (isNodeWorker(target)) {
+    target.on(event, handler);
+  } else if ('addEventListener' in target) {
+    target.addEventListener(event, handler);
+  }
+}
+
+export function removeEventListener(target: Window | WorkerLike | HTMLIFrameElement, event: string, handler: any) {
+  if (isNodeWorker(target)) {
+    target.off(event, handler);
+  } else if ('removeEventListener' in target) {
+    target.removeEventListener(event, handler);
+  }
+}
+
+/**
+ * Normalize message event data across Web and Node.js environments
+ * In web, data is in event.data
+ * In Node.js, the event itself contains the data
+ */
+export function getEventData(event: any): any {
+  return event.data || event;
+}
+

@@ -1,16 +1,28 @@
-import { extractMethods, generateId, getOriginFromURL } from "./helpers";
+import { extractMethods, generateId, getOriginFromURL, isNodeEnv, addEventListener, removeEventListener, isNodeWorker, NodeWorker, getEventData } from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
 import { actions, events, IConnection, IConnections, ISchema } from "./types";
 
 const connections: IConnections = {};
 
-function isValidTarget(iframe: HTMLIFrameElement, event: any) {
-  const childURL = iframe.getAttribute("src");
-  const childOrigin = getOriginFromURL(childURL);
-  const hasProperOrigin = event.origin === childOrigin;
-  const hasProperSource = event.source === iframe.contentWindow;
+function isValidTarget(guest: HTMLIFrameElement | Worker | NodeWorker, event: any) {
+  // If it's a worker, we don't need to validate origin
+  if (isNodeWorker(guest) || (typeof Worker !== 'undefined' && guest instanceof Worker)) {
+    return true;
+  }
 
-  return hasProperOrigin && hasProperSource;
+  // For iframes, check origin and source
+  const iframe = guest as HTMLIFrameElement;
+  try {
+    const childURL = iframe.src;
+    const childOrigin = getOriginFromURL(childURL);
+    const hasProperOrigin = event.origin === childOrigin;
+    const hasProperSource = event.source === iframe.contentWindow;
+
+    return (hasProperOrigin && hasProperSource) || !childURL;
+  } catch (e) {
+    console.warn('Error checking iframe target:', e);
+    return false;
+  }
 }
 
 /**
@@ -21,19 +33,22 @@ function isValidTarget(iframe: HTMLIFrameElement, event: any) {
  * @param schema
  * @returns Promise
  */
-function connect(guest: HTMLIFrameElement | Worker, schema: ISchema = {}): Promise<IConnection> {
+function connect(guest: HTMLIFrameElement | Worker | NodeWorker, schema: ISchema = {}): Promise<IConnection> {
   if (!guest) throw new Error("a target is required");
 
-  const guestIsWorker = (guest as Worker).onerror !== undefined && (guest as Worker).onmessage !== undefined;
-  const listeners = guestIsWorker ? guest : window;
+  const guestIsWorker = isNodeWorker(guest) || ((guest as Worker).onerror !== undefined && (guest as Worker).onmessage !== undefined);
+  const listeners = guestIsWorker || isNodeEnv() ? guest : window;
 
   return new Promise((resolve) => {
     const connectionID = generateId();
 
     // on handshake request
     function handleHandshake(event: any) {
-      if (!guestIsWorker && !isValidTarget(guest as HTMLIFrameElement, event)) return;
-      if (event.data.action !== actions.HANDSHAKE_REQUEST) return;
+
+      if (!guestIsWorker && !isNodeEnv() && !isValidTarget(guest, event)) return;
+      
+      const eventData = getEventData(event);
+      if (eventData?.action !== actions.HANDSHAKE_REQUEST) return;
 
       // register local methods
       const localMethods = extractMethods(schema);
@@ -41,16 +56,16 @@ function connect(guest: HTMLIFrameElement | Worker, schema: ISchema = {}): Promi
         schema,
         localMethods,
         connectionID,
-        guestIsWorker ? (guest as Worker) : undefined
+        guestIsWorker || isNodeEnv() ? (guest as Worker) : undefined
       );
 
       // register remote methods
       const { remote, unregisterRemote } = registerRemoteMethods(
-        event.data.schema,
-        event.data.methods,
+        eventData.schema,
+        eventData.methods,
         connectionID,
         event,
-        guestIsWorker ? (guest as Worker) : undefined
+        guestIsWorker || isNodeEnv() ? (guest as Worker) : undefined
       );
 
       const payload = {
@@ -66,10 +81,12 @@ function connect(guest: HTMLIFrameElement | Worker, schema: ISchema = {}): Promi
 
       // close the connection and all listeners when called
       const close = () => {
-        listeners.removeEventListener(events.MESSAGE, handleHandshake);
+        removeEventListener(listeners, events.MESSAGE, handleHandshake);
         unregisterRemote();
         unregisterLocal();
-        if (guestIsWorker) (guest as Worker).terminate();
+        if (guestIsWorker) {
+          (guest as Worker).terminate();
+        }
       };
 
       const connection: IConnection = { remote, close };
@@ -77,15 +94,16 @@ function connect(guest: HTMLIFrameElement | Worker, schema: ISchema = {}): Promi
     }
 
     // subscribe to HANDSHAKE MESSAGES
-    listeners.addEventListener(events.MESSAGE, handleHandshake);
+    addEventListener(listeners, events.MESSAGE, handleHandshake);
 
     // on handshake reply
     function handleHandshakeReply(event: any) {
-      if (event.data.action !== actions.HANDSHAKE_REPLY) return;
-      return resolve(connections[event.data.connectionID]);
+      const eventData = getEventData(event);
+      if (eventData?.action !== actions.HANDSHAKE_REPLY) return;
+      return resolve(connections[eventData.connectionID]);
     }
 
-    listeners.addEventListener(events.MESSAGE, handleHandshakeReply);
+    addEventListener(listeners, events.MESSAGE, handleHandshakeReply);
   });
 }
 
