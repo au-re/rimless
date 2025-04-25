@@ -122,6 +122,7 @@ let NodeWorkerClass: any = null;
 
 if (isNodeEnv()) {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const workerThreads = require("worker_threads");
     NodeWorkerClass = workerThreads.Worker;
   } catch {}

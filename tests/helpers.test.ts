@@ -70,25 +70,25 @@ describe("environment detection", () => {
     });
 
     it("returns true in worker environment", () => {
-      // @ts-ignore
+      // @ts-expect-error - mocking worker env
       global.window = undefined;
-      // @ts-ignore
+      // @ts-expect-error - mocking worker env
       global.self = {};
       expect(isWorker()).toBe(true);
     });
 
     it("returns false in browser environment", () => {
-      // @ts-ignore
+      // @ts-expect-error - mocking browser env
       global.window = {};
-      // @ts-ignore
+      // @ts-expect-error - mocking browser env
       global.self = {};
       expect(isWorker()).toBe(false);
     });
 
     it("returns false when self is undefined", () => {
-      // @ts-ignore
+      // @ts-expect-error - mocking node env
       global.window = undefined;
-      // @ts-ignore
+      // @ts-expect-error - mocking node env
       global.self = undefined;
       expect(isWorker()).toBe(false);
     });
@@ -102,13 +102,13 @@ describe("environment detection", () => {
     });
 
     it("returns true in Node.js environment", () => {
-      // @ts-ignore
+      // @ts-expect-error - mocking node env
       global.window = undefined;
       expect(isNodeEnv()).toBe(true);
     });
 
     it("returns false in browser environment", () => {
-      // @ts-ignore
+      // @ts-expect-error - mocking browser env
       global.window = {};
       expect(isNodeEnv()).toBe(false);
     });
