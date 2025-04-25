@@ -2,10 +2,10 @@
 [npm-image]: https://badge.fury.io/js/rimless.svg
 [commitizen-url]: http://commitizen.github.io/cz-cli/
 [commitizen-image]: https://img.shields.io/badge/commitizen-friendly-brightgreen.svg
-[license-url]: https://github.com/au-re/rimless/LICENSE
+[license-url]: https://github.com/jamdotdev/rimless/LICENSE
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/au-re/rimless/master/assets/icon.png"/>
+  <img src="https://raw.githubusercontent.com/jamdotdev/rimless/master/assets/icon.png"/>
 </p>
 
 # rimless
