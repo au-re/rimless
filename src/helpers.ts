@@ -122,10 +122,9 @@ let NodeWorkerClass: any = null;
 
 if (isNodeEnv()) {
   try {
-    const workerThreads = require('worker_threads');
+    const workerThreads = require("worker_threads");
     NodeWorkerClass = workerThreads.Worker;
-  } catch {
-  }
+  } catch {}
 }
 
 export function isNodeWorker(target: any): target is NodeWorker {
@@ -139,7 +138,7 @@ export function isWorkerLike(target: any): target is WorkerLike {
 export function addEventListener(target: Window | WorkerLike | HTMLIFrameElement, event: string, handler: any) {
   if (isNodeWorker(target)) {
     target.on(event, handler);
-  } else if ('addEventListener' in target) {
+  } else if ("addEventListener" in target) {
     target.addEventListener(event, handler);
   }
 }
@@ -147,7 +146,7 @@ export function addEventListener(target: Window | WorkerLike | HTMLIFrameElement
 export function removeEventListener(target: Window | WorkerLike | HTMLIFrameElement, event: string, handler: any) {
   if (isNodeWorker(target)) {
     target.off(event, handler);
-  } else if ('removeEventListener' in target) {
+  } else if ("removeEventListener" in target) {
     target.removeEventListener(event, handler);
   }
 }
@@ -160,4 +159,3 @@ export function removeEventListener(target: Window | WorkerLike | HTMLIFrameElem
 export function getEventData(event: any): any {
   return event.data || event;
 }
-
