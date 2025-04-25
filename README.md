@@ -1,5 +1,5 @@
-[npm-url]: https://www.npmjs.com/package/rimless
-[npm-image]: https://badge.fury.io/js/rimless.svg
+[npm-url]: https://www.npmjs.com/package/@jam.dev/rimless
+[npm-image]: https://badge.fury.io/js/@jam.dev%2Frimless.svg
 [commitizen-url]: http://commitizen.github.io/cz-cli/
 [commitizen-image]: https://img.shields.io/badge/commitizen-friendly-brightgreen.svg
 [license-url]: https://github.com/jamdotdev/rimless/LICENSE
@@ -12,7 +12,7 @@
 
 [![npm][npm-image]][npm-url]
 [![Commitizen friendly][commitizen-image]][commitizen-url]
-![npm bundle size](https://img.shields.io/bundlephobia/minzip/rimless)
+![npm bundle size](https://img.shields.io/bundlephobia/minzip/@jam.dev%2Frimless)
 
 > Rimless makes event based communication easy with a promise-based API wrapping [postMessage](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage). Works with **iframes**, **webworkers**, and **Node.js worker threads**.
 
@@ -28,16 +28,16 @@ You can see it in action in the code sandbox below:
 
 ## Installation
 
-Rimless can be installed via [npm](https://www.npmjs.com/package/rimless).
+Rimless can be installed via [npm](https://www.npmjs.com/package/@jam.dev/rimless).
 
 ```
-$ npm i -S rimless
+$ npm i -S @jam.dev/rimless
 ```
 
 or from a CDN
 
 ```html
-<script src="https://unpkg.com/rimless/lib/rimless.min.js"></script>
+<script src="https://unpkg.com/@jam.dev%2Frimless/lib/rimless.min.js"></script>
 ```
 
 ## Example Usage
@@ -52,7 +52,7 @@ Below is a minimal but complete round‑trip that shows how each side can:
 **Host (page that embeds the iframe)**
 
 ```js
-import { host } from "rimless";
+import { host } from "@jam.dev/rimless";
 
 const iframe = document.getElementById("myIframe");
 
@@ -78,7 +78,7 @@ connection.close();
 **Guest (code that runs inside the iframe)**
 
 ```js
-import { guest } from "rimless";
+import { guest } from "@jam.dev/rimless";
 
 // The object you pass to guest.connect is your public surface
 const guestApi = {
@@ -112,7 +112,7 @@ connection.close();
 This is how you can **connect your website** to an iframe or webworker:
 
 ```js
-import { host } from "rimless";
+import { host } from "@jam.dev/rimless";
 
 const iframe = document.getElementById("myIframe");
 const worker = new Worker("myWorker");
@@ -129,7 +129,7 @@ You also need to **connect your iframe/webworker** to the host website.
 Usage from an iframe:
 
 ```js
-import { guest } from "rimless";
+import { guest } from "@jam.dev/rimless";
 
 // connect to the parent website
 guest.connect();
@@ -138,7 +138,7 @@ guest.connect();
 Usage from a webworker:
 
 ```js
-importScripts("https://unpkg.com/rimless/lib/rimless.min.js");
+importScripts("https://unpkg.com/@jam.dev%2Frimless/lib/rimless.min.js");
 
 const { guest } = rimless;
 
@@ -151,7 +151,7 @@ guest.connect();
 To do anything meaningful with this connection you need to provide a schema that defines **the API** of the host/iframe/webworker. Any serializable values as well as functions are ok to use. In the example below the host website provides a function that will update its background color when invoked.
 
 ```js
-import { host } from "rimless";
+import { host } from "@jam.dev/rimless";
 
 const api = {
   setColor: (color) => {
@@ -171,7 +171,7 @@ The api schema must be passed on connection, the same applies to the `iframe/web
 With the host API exposed we can now invoke the remote procedure from the iframe.
 
 ```js
-import { guest } from "rimless";
+import { guest } from "@jam.dev/rimless";
 
 // connect returns a promise that resolves in a connection object
 // `connection.remote` contains the api you can invoke
@@ -238,7 +238,7 @@ remote.setColor("#011627");
 Closing a connection will remove all event listeners that were registered.
 
 ```js
-import { guest } from "rimless";
+import { guest } from "@jam.dev/rimless";
 
 guest.connect().then((connection) => {
   connection.close();
