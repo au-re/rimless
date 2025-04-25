@@ -1,5 +1,8 @@
 name: Test and build when pushing to a branch
-on: push
+on:
+  push:
+  workflow_call:
+
 jobs:
   test_and_build:
     runs-on: ubuntu-latest

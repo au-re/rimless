@@ -1,0 +1,97 @@
+name: Publish Package
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  test-and-build:
+    name: Test and build
+    uses: ./.github/workflows/test-and-build.yml
+
+  publish:
+    # if: github.event.pull_request.merged == true && (contains(github.event.pull_request.labels.*.name, 'release:major') || contains(github.event.pull_request.labels.*.name, 'release:minor') || contains(github.event.pull_request.labels.*.name, 'release:patch'))
+    if: contains(github.event.pull_request.labels.*.name, 'release:major') || contains(github.event.pull_request.labels.*.name, 'release:minor') || contains(github.event.pull_request.labels.*.name, 'release:patch')
+    needs: test-and-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine version type from label
+        id: version-type
+        run: |
+          LABELS='${{ toJson(github.event.pull_request.labels.*.name) }}'
+          if echo $LABELS | grep -a "release:major"; then
+            VERSION_TYPE="major"
+          elif echo $LABELS | grep -a "release:minor"; then
+            VERSION_TYPE="minor"
+          elif echo $LABELS | grep -a "release:patch"; then
+            VERSION_TYPE="patch"
+          else
+            echo "::error::No valid release label found (release:major, release:minor, release:patch)."
+            exit 1
+          fi
+          echo "type=$VERSION_TYPE" >> $GITHUB_OUTPUT
+          echo "Running a $VERSION_TYPE release"
+
+      - name: Configure git access
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.JAM_GIT_PUSHER_APP_ID }}
+          private-key: ${{ secrets.JAM_GIT_PUSHER_PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: "master"
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.19"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Configure git author
+        run: |
+          git config user.name GitHub Actions
+          git config user.email github-actions@github.com
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Tag release
+        id: bump-version
+        run: |
+          npm version "${{ steps.version-type.outputs.type }}"
+          echo "new_version=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
+
+      # Run this after the version bump! So that the version is correct in the release
+      - name: Build
+        run: npm run build
+
+      # Run this after the build! So we only push tags if the build is successful
+      - name: Push tags
+        run: git push --tags origin HEAD
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create a GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.bump-version.outputs.new_version }}
+          release_name: v${{ steps.bump-version.outputs.new_version }}
+          draft: false
+          prerelease: false
+
+      - name: Publish to NPM
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
