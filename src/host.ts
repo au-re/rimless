@@ -1,4 +1,14 @@
-import { extractMethods, generateId, getOriginFromURL, isNodeEnv, addEventListener, removeEventListener, isNodeWorker, NodeWorker, getEventData } from "./helpers";
+import {
+  extractMethods,
+  generateId,
+  getOriginFromURL,
+  isNodeEnv,
+  addEventListener,
+  removeEventListener,
+  isNodeWorker,
+  NodeWorker,
+  getEventData,
+} from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
 import { actions, events, IConnection, IConnections, ISchema } from "./types";
 
@@ -6,7 +16,7 @@ const connections: IConnections = {};
 
 function isValidTarget(guest: HTMLIFrameElement | Worker | NodeWorker, event: any) {
   // If it's a worker, we don't need to validate origin
-  if (isNodeWorker(guest) || (typeof Worker !== 'undefined' && guest instanceof Worker)) {
+  if (isNodeWorker(guest) || (typeof Worker !== "undefined" && guest instanceof Worker)) {
     return true;
   }
 
@@ -20,7 +30,7 @@ function isValidTarget(guest: HTMLIFrameElement | Worker | NodeWorker, event: an
 
     return (hasProperOrigin && hasProperSource) || !childURL;
   } catch (e) {
-    console.warn('Error checking iframe target:', e);
+    console.warn("Error checking iframe target:", e);
     return false;
   }
 }
@@ -36,7 +46,8 @@ function isValidTarget(guest: HTMLIFrameElement | Worker | NodeWorker, event: an
 function connect(guest: HTMLIFrameElement | Worker | NodeWorker, schema: ISchema = {}): Promise<IConnection> {
   if (!guest) throw new Error("a target is required");
 
-  const guestIsWorker = isNodeWorker(guest) || ((guest as Worker).onerror !== undefined && (guest as Worker).onmessage !== undefined);
+  const guestIsWorker =
+    isNodeWorker(guest) || ((guest as Worker).onerror !== undefined && (guest as Worker).onmessage !== undefined);
   const listeners = guestIsWorker || isNodeEnv() ? guest : window;
 
   return new Promise((resolve) => {
@@ -44,9 +55,8 @@ function connect(guest: HTMLIFrameElement | Worker | NodeWorker, schema: ISchema
 
     // on handshake request
     function handleHandshake(event: any) {
-
       if (!guestIsWorker && !isNodeEnv() && !isValidTarget(guest, event)) return;
-      
+
       const eventData = getEventData(event);
       if (eventData?.action !== actions.HANDSHAKE_REQUEST) return;
 
@@ -56,7 +66,7 @@ function connect(guest: HTMLIFrameElement | Worker | NodeWorker, schema: ISchema
         schema,
         localMethods,
         connectionID,
-        guestIsWorker || isNodeEnv() ? (guest as Worker) : undefined
+        guestIsWorker || isNodeEnv() ? (guest as Worker) : undefined,
       );
 
       // register remote methods
@@ -65,7 +75,7 @@ function connect(guest: HTMLIFrameElement | Worker | NodeWorker, schema: ISchema
         eventData.methods,
         connectionID,
         event,
-        guestIsWorker || isNodeEnv() ? (guest as Worker) : undefined
+        guestIsWorker || isNodeEnv() ? (guest as Worker) : undefined,
       );
 
       const payload = {

@@ -19,7 +19,7 @@ function connect(schema: ISchema = {}, eventHandlers?: EventHandlers): Promise<I
         eventData.schema,
         eventData.methods,
         eventData.connectionID,
-        event
+        event,
       );
 
       await eventHandlers?.onConnectionSetup?.(remote);

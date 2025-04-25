@@ -1,4 +1,13 @@
-import { generateId, get, isNodeEnv, isWorker, set, addEventListener, removeEventListener, getEventData } from "./helpers";
+import {
+  generateId,
+  get,
+  isNodeEnv,
+  isWorker,
+  set,
+  addEventListener,
+  removeEventListener,
+  getEventData,
+} from "./helpers";
 import { actions, events, IRPCRequestPayload, IRPCResolvePayload, ISchema } from "./types";
 
 /**
@@ -14,7 +23,7 @@ export function registerLocalMethods(
   schema: ISchema = {},
   methods: any[] = [],
   _connectionID: string,
-  guest?: Worker
+  guest?: Worker,
 ): any {
   const listeners: any[] = [];
   methods.forEach((methodName) => {
@@ -81,7 +90,7 @@ export function createRPC(
   _connectionID: string,
   event: any,
   listeners: Array<() => void> = [],
-  guest?: Worker
+  guest?: Worker,
 ) {
   return (...args: any) => {
     return new Promise((resolve, reject) => {
@@ -140,7 +149,7 @@ export function registerRemoteMethods(
   methods: any[] = [],
   _connectionID: string,
   event: any,
-  guest?: Worker
+  guest?: Worker,
 ) {
   const remote = { ...schema };
   const listeners: Array<() => void> = [];
