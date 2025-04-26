@@ -96,7 +96,7 @@ export function createRPC(
 ) {
   return (...args: any) => {
     return new Promise((resolve, reject) => {
-      const callID = generateId();
+      const _callID = generateId();
 
       // on RPC response
       function handleResponse(event: any) {
@@ -105,6 +105,7 @@ export function createRPC(
 
         if (!callID || !callName) return;
         if (callName !== _callName) return;
+        if (_callID !== callID) return;
         if (connectionID !== _connectionID) return;
 
         // resolve the response
@@ -116,7 +117,7 @@ export function createRPC(
       const payload = {
         action: actions.RPC_REQUEST,
         args: JSON.parse(JSON.stringify(args)),
-        callID,
+        callID: _callID,
         callName: _callName,
         connectionID: _connectionID,
       };
