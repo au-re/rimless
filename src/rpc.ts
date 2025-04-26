@@ -1,5 +1,13 @@
-import { generateId, get, isNodeEnv, isWorker, set, addEventListener, removeEventListener, getEventData } from "./helpers";
-import { actions, events, IRPCRequestPayload, IRPCResolvePayload, ISchema } from "./types";
+import {
+  addEventListener,
+  generateId,
+  get,
+  getEventData,
+  postMessageToTarget,
+  removeEventListener,
+  set,
+} from "./helpers";
+import { actions, events, IRPCRequestPayload, IRPCResolvePayload, ISchema, Target } from "./types";
 
 /**
  * for each function in the schema
@@ -14,9 +22,11 @@ export function registerLocalMethods(
   schema: ISchema = {},
   methods: any[] = [],
   _connectionID: string,
-  guest?: Worker
-): any {
+  listenTo: Worker | Window,
+  target: Target,
+) {
   const listeners: any[] = [];
+
   methods.forEach((methodName) => {
     // handle a remote calling a local method
     async function handleCall(event: any) {
@@ -53,19 +63,12 @@ export function registerLocalMethods(
         payload.error = JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
       }
 
-      if (guest) guest.postMessage(payload);
-      else if (isWorker()) (self as any).postMessage(payload);
-      else event.source.postMessage(payload, event.origin);
+      postMessageToTarget(target, payload, event?.origin);
     }
 
     // subscribe to the call event
-    if (guest) {
-      addEventListener(guest, events.MESSAGE, handleCall);
-      listeners.push(() => removeEventListener(guest, events.MESSAGE, handleCall));
-    } else {
-      addEventListener(self, events.MESSAGE, handleCall);
-      listeners.push(() => removeEventListener(self, events.MESSAGE, handleCall));
-    }
+    addEventListener(listenTo, events.MESSAGE, handleCall);
+    listeners.push(() => removeEventListener(listenTo, events.MESSAGE, handleCall));
   });
 
   return () => listeners.forEach((unregister) => unregister());
@@ -88,7 +91,8 @@ export function createRPC(
   _connectionID: string,
   event: any,
   listeners: Array<() => void> = [],
-  guest?: Worker
+  listenTo: Worker | Window,
+  target: Target,
 ) {
   return (...args: any) => {
     return new Promise((resolve, reject) => {
@@ -117,17 +121,10 @@ export function createRPC(
         connectionID: _connectionID,
       };
 
-      if (guest) {
-        addEventListener(guest, events.MESSAGE, handleResponse);
-        listeners.push(() => removeEventListener(guest, events.MESSAGE, handleResponse));
-      } else {
-        addEventListener(self, events.MESSAGE, handleResponse);
-        listeners.push(() => removeEventListener(self, events.MESSAGE, handleResponse));
-      }
+      addEventListener(listenTo, events.MESSAGE, handleResponse);
+      listeners.push(() => removeEventListener(listenTo, events.MESSAGE, handleResponse));
 
-      if (guest) guest.postMessage(payload);
-      else if (isWorker() || isNodeEnv()) (self as any).postMessage(payload);
-      else (event.source || event.target).postMessage(payload, event.origin);
+      postMessageToTarget(target, payload, event?.origin);
     });
   };
 }
@@ -138,22 +135,23 @@ export function createRPC(
  *
  * @param schema
  * @param methods
- * @param _connectionID
+ * @param connectionID
  * @param event
  * @param guest
  */
 export function registerRemoteMethods(
   schema: ISchema = {},
   methods: any[] = [],
-  _connectionID: string,
+  connectionID: string,
   event: any,
-  guest?: Worker
+  listenTo: Worker | Window,
+  target: Target,
 ) {
   const remote = { ...schema };
   const listeners: Array<() => void> = [];
 
   methods.forEach((methodName) => {
-    const rpc = createRPC(methodName, _connectionID, event, listeners, guest);
+    const rpc = createRPC(methodName, connectionID, event, listeners, listenTo, target);
     set(remote, methodName, rpc);
   });
 

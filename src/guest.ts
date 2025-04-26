@@ -1,10 +1,12 @@
-import { extractMethods, getEventData, isWorker } from "./helpers";
+import { extractMethods, getEventData, getTargetHost, postMessageToTarget } from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
 import { actions, EventHandlers, events, IConnection, ISchema } from "./types";
 
 function connect(schema: ISchema = {}, eventHandlers?: EventHandlers): Promise<IConnection> {
-  return new Promise((resolve) => {
+  return new Promise(async (resolve) => {
     const localMethods = extractMethods(schema);
+    const sendTo = getTargetHost();
+    const listenTo = self || window;
 
     // on handshake response
     async function handleHandshakeResponse(event: any) {
@@ -12,7 +14,7 @@ function connect(schema: ISchema = {}, eventHandlers?: EventHandlers): Promise<I
       if (eventData?.action !== actions.HANDSHAKE_REPLY) return;
 
       // register local methods
-      const unregisterLocal = registerLocalMethods(schema, localMethods, eventData.connectionID);
+      const unregisterLocal = registerLocalMethods(schema, localMethods, eventData.connectionID, listenTo, sendTo);
 
       // register remote methods
       const { remote, unregisterRemote } = registerRemoteMethods(
@@ -20,6 +22,8 @@ function connect(schema: ISchema = {}, eventHandlers?: EventHandlers): Promise<I
         eventData.methods,
         eventData.connectionID,
         event,
+        listenTo,
+        sendTo,
       );
 
       await eventHandlers?.onConnectionSetup?.(remote);
@@ -30,8 +34,7 @@ function connect(schema: ISchema = {}, eventHandlers?: EventHandlers): Promise<I
         connectionID: eventData.connectionID,
       };
 
-      if (isWorker()) self.postMessage(payload);
-      else window.parent.postMessage(payload, "*");
+      postMessageToTarget(sendTo, payload, event?.origin);
 
       // close the connection and all listeners when called
       const close = () => {
@@ -41,11 +44,11 @@ function connect(schema: ISchema = {}, eventHandlers?: EventHandlers): Promise<I
       };
 
       // resolve connection object
-      const connection = { remote, close };
+      const connection = { remote, close, id: eventData.connectionID };
       return resolve(connection);
     }
 
-    // subscribe to HANDSHAKE REPLY MESSAGES
+    // subscribe to HANDSHAKE RESPONSE MESSAGES
     self.addEventListener(events.MESSAGE, handleHandshakeResponse);
 
     const payload = {
@@ -54,8 +57,7 @@ function connect(schema: ISchema = {}, eventHandlers?: EventHandlers): Promise<I
       schema: JSON.parse(JSON.stringify(schema)),
     };
 
-    if (isWorker()) (self as any).postMessage(payload);
-    else window.parent.postMessage(payload, "*");
+    postMessageToTarget(sendTo, payload);
   });
 }
 

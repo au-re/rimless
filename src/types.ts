@@ -1,3 +1,12 @@
+export interface NodeWorker {
+  on(event: string, handler: any): void;
+  off(event: string, handler: any): void;
+  postMessage(message: any): void;
+  terminate(): void;
+}
+
+export type WorkerLike = Worker | NodeWorker;
+
 export enum events {
   MESSAGE = "message",
 }
@@ -15,6 +24,7 @@ export interface ISchema {
 }
 
 export interface IConnection {
+  id: string;
   remote: ISchema;
   close: () => void;
 }
@@ -63,3 +73,6 @@ export interface IRPCResolvePayload {
 export interface EventHandlers {
   onConnectionSetup: (remote: ISchema) => Promise<void>;
 }
+
+export type Target = Window | WorkerLike;
+export type Guest = WorkerLike | HTMLIFrameElement;

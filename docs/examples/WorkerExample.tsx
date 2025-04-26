@@ -1,15 +1,23 @@
-import React from "react";
+import React, { useEffect } from "react";
 
-import { host } from "../../src/index";
+import { host, IConnection } from "../../src/index";
 import Worker from "./worker?worker";
 
 function WorkerExample() {
   const [color, setColor] = React.useState("#fff");
   const [message, setMessage] = React.useState("");
+  const [connection, setConnection] = React.useState<IConnection | null>(null);
+
+  useEffect(() => {
+    const options = { initialValue: "initial value from host" };
+    const worker = new Worker();
+    host.connect(worker, options).then((_connection) => {
+      setConnection(_connection);
+    });
+  }, []);
 
   const onClick = async () => {
-    const options = { initialValue: "initial value from host" };
-    const connection = await host.connect(new Worker(), options);
+    if (!connection) return;
 
     const messageRes = await connection?.remote.getMessage();
     setMessage(messageRes);

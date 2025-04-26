@@ -66,8 +66,8 @@
     }
 
     async function connect() {
-
       const connection = await guest.connect({
+        helloFrom: "iframe:" + makeRandomColor(),
         makeRandomColor,
         setColor: (color) => {
           document.body.style.background = color;
