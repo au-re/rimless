@@ -10,6 +10,9 @@ import {
   Target,
 } from "./types";
 
+/** Private symbol to which we will assign transferable objects */
+const SYM_TRANSFERABLES = Symbol();
+
 /**
  * for each function in methods
  * 1. subscribe to an event that the remote can call
@@ -46,23 +49,24 @@ export function registerLocalMethods(
         result: null,
       };
 
+      // when a host function returns transferable results to the remote, the
+      // transferables are assigned to a special symbol on each function's result
+      let transferables: Transferable[] | undefined = undefined;
+
       // run function and return the results to the remote
       try {
-        const result = await method(...args);
+        payload.result = await method(...args);
 
-        if (!result) {
-          // if the result is falsy (null, undefined, "", etc), set it directly
-          payload.result = result;
-        } else {
-          // otherwise parse a stringified version of it
-          payload.result = JSON.parse(JSON.stringify(result));
+        if (payload.result && payload.result[SYM_TRANSFERABLES]) {
+          transferables = payload.result[SYM_TRANSFERABLES] ?? [];
+          delete payload.result[SYM_TRANSFERABLES];
         }
       } catch (error) {
         payload.action = actions.RPC_REJECT;
         payload.error = JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
       }
 
-      postMessageToTarget(sendTo, payload, event?.origin);
+      postMessageToTarget(sendTo, payload, event?.origin, transferables);
     }
 
     // subscribe to the call event
@@ -93,7 +97,7 @@ export function createRPC(
   listenTo: Environment,
   sendTo: Target
 ) {
-  return (...args: any) => {
+  return (...args: any[]) => {
     return new Promise((resolve, reject) => {
       const requestID = generateId();
 
@@ -115,16 +119,24 @@ export function createRPC(
       // send the RPC request with arguments
       const payload = {
         action: actions.RPC_REQUEST,
-        args: JSON.parse(JSON.stringify(args)),
+        args,
         callID: requestID,
         callName: rpcCallName,
         connectionID: rpcConnectionID,
       };
 
+      // if the arguments have transferables, post them as well
+      const transferables = args.reduce(
+        (transferables, arg) =>
+          arg[SYM_TRANSFERABLES]?.length ? transferables.concat(arg[SYM_TRANSFERABLES]) : transferables,
+        // @ts-expect-error: we know this is an array of transferables (if it exists)
+        args[SYM_TRANSFERABLES] ?? []
+      );
+
       addEventListener(listenTo, events.MESSAGE, handleResponse);
       listeners.push(() => removeEventListener(listenTo, events.MESSAGE, handleResponse));
 
-      postMessageToTarget(sendTo, payload, event?.origin);
+      postMessageToTarget(sendTo, payload, event?.origin, transferables);
     });
   };
 }
@@ -160,3 +172,44 @@ export function registerRemoteMethods(
     unregisterRemote: () => listeners.forEach((unregister) => unregister()),
   };
 }
+
+/**
+ * This function is used by API schema declarations and remote function calls alike to
+ * indicate which variables should be declared as transferable over `postMessage` calls.
+ *
+ * @param cb a function that takes a transfer function as an argument and returns an object
+ *           (in the loose, `typeof foo === "object"` sense)
+ * @return result the callback's return value, with an extra array of transferable objects
+ *                assigned to rimless' private symbol `SYM_TRANSFERABLES`
+ *
+ * The `transfer(...)` function can be called with one or more objects to transfer. When
+ * called with one object, it returns that object. When called with zero or multiple objects,
+ * it returns an array of the objects. Calling `transfer` will only modify the callback result,
+ * not the original object itself (or objects themselves).
+ *
+ * @example
+ * host.connect({
+ *   foo: (...args) => {
+ *     const foo = new ArrayBuffer(8);
+ *     const bar = new ArrayBuffer(8);
+ *
+ *     return withTransferable((transfer) => transfer(foo, bar));
+ *   }),                                  // equal to [transfer(foo), transfer(bar)]
+ * });
+ *
+ * @example
+ * host.remote.foo(withTransferable((transfer) => ({
+ *   stream: transfer(new ReadableStream()),
+ * })));
+ */
+export const withTransferable = <T, V extends object>(cb: (transfer: (transferable: T) => void) => V) => {
+  const transferables: T[] = [];
+  const transfer = (...toTransfer: [T, ...T[]]) => {
+    transferables.push(...toTransfer);
+    return toTransfer.length === 1 ? toTransfer[0] : toTransfer;
+  };
+
+  const result = cb(transfer);
+
+  return Object.assign(result, { [SYM_TRANSFERABLES]: transferables });
+};
