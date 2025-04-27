@@ -7,7 +7,16 @@ import {
   removeEventListener,
   set,
 } from "./helpers";
-import { actions, events, IRPCRequestPayload, IRPCResolvePayload, ISchema, Target } from "./types";
+import {
+  actions,
+  Environment,
+  events,
+  RimlessEvent,
+  RPCRequestPayload,
+  RPCResolvePayload,
+  Schema,
+  Target,
+} from "./types";
 
 /**
  * for each function in the schema
@@ -15,15 +24,15 @@ import { actions, events, IRPCRequestPayload, IRPCResolvePayload, ISchema, Targe
  * 2. listen for calls from the remote. When called execute the function and emit the results.
  *
  * @param methods an array of method ids from the local schema
- * @param _connectionID
+ * @param rpcConnectionID
  * @return a function to cancel all subscriptions
  */
 export function registerLocalMethods(
-  schema: ISchema = {},
-  methods: any[] = [],
-  _connectionID: string,
-  listenTo: Worker | Window,
-  target: Target,
+  schema: Schema = {},
+  methods: string[] = [],
+  rpcConnectionID: string,
+  listenTo: Environment,
+  sendTo: Target,
 ) {
   const listeners: any[] = [];
 
@@ -31,14 +40,14 @@ export function registerLocalMethods(
     // handle a remote calling a local method
     async function handleCall(event: any) {
       const eventData = getEventData(event);
-      const { action, callID, connectionID, callName, args = [] } = eventData as IRPCRequestPayload;
+      const { action, callID, connectionID, callName, args = [] } = eventData as RPCRequestPayload;
 
       if (action !== actions.RPC_REQUEST) return;
       if (!callID || !callName) return;
       if (callName !== methodName) return;
-      if (connectionID !== _connectionID) return;
+      if (connectionID !== rpcConnectionID) return;
 
-      const payload: IRPCResolvePayload = {
+      const payload: RPCResolvePayload = {
         action: actions.RPC_RESOLVE,
         callID,
         callName,
@@ -63,7 +72,7 @@ export function registerLocalMethods(
         payload.error = JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
       }
 
-      postMessageToTarget(target, payload, event?.origin);
+      postMessageToTarget(sendTo, payload, event?.origin);
     }
 
     // subscribe to the call event
@@ -78,8 +87,8 @@ export function registerLocalMethods(
  * Create a function that will make an RPC request to the remote with some arguments.
  * Listen to an event that returns the results from the remote.
  *
- * @param _callName
- * @param _connectionID
+ * @param rpcCallName
+ * @param rpcConnectionID
  * @param event
  * @param listeners
  * @param guest
@@ -87,26 +96,26 @@ export function registerLocalMethods(
  * @returns a promise with the result of the RPC
  */
 export function createRPC(
-  _callName: string,
-  _connectionID: string,
-  event: any,
+  rpcCallName: string,
+  rpcConnectionID: string,
+  event: RimlessEvent,
   listeners: Array<() => void> = [],
-  listenTo: Worker | Window,
-  target: Target,
+  listenTo: Environment,
+  sendTo: Target,
 ) {
   return (...args: any) => {
     return new Promise((resolve, reject) => {
-      const _callID = generateId();
+      const requestID = generateId();
 
       // on RPC response
       function handleResponse(event: any) {
         const eventData = getEventData(event);
-        const { callID, connectionID, callName, result, error, action } = eventData as IRPCResolvePayload;
+        const { callID, connectionID, callName, result, error, action } = eventData as RPCResolvePayload;
 
         if (!callID || !callName) return;
-        if (callName !== _callName) return;
-        if (_callID !== callID) return;
-        if (connectionID !== _connectionID) return;
+        if (callName !== rpcCallName) return;
+        if (callID !== requestID) return;
+        if (connectionID !== rpcConnectionID) return;
 
         // resolve the response
         if (action === actions.RPC_RESOLVE) return resolve(result);
@@ -117,15 +126,15 @@ export function createRPC(
       const payload = {
         action: actions.RPC_REQUEST,
         args: JSON.parse(JSON.stringify(args)),
-        callID: _callID,
-        callName: _callName,
-        connectionID: _connectionID,
+        callID: requestID,
+        callName: rpcCallName,
+        connectionID: rpcConnectionID,
       };
 
       addEventListener(listenTo, events.MESSAGE, handleResponse);
       listeners.push(() => removeEventListener(listenTo, events.MESSAGE, handleResponse));
 
-      postMessageToTarget(target, payload, event?.origin);
+      postMessageToTarget(sendTo, payload, event?.origin);
     });
   };
 }
@@ -141,18 +150,18 @@ export function createRPC(
  * @param guest
  */
 export function registerRemoteMethods(
-  schema: ISchema = {},
-  methods: any[] = [],
+  schema: Schema = {},
+  methods: string[] = [],
   connectionID: string,
-  event: any,
-  listenTo: Worker | Window,
-  target: Target,
+  event: RimlessEvent,
+  listenTo: Environment,
+  sendTo: Target,
 ) {
   const remote = { ...schema };
   const listeners: Array<() => void> = [];
 
   methods.forEach((methodName) => {
-    const rpc = createRPC(methodName, connectionID, event, listeners, listenTo, target);
+    const rpc = createRPC(methodName, connectionID, event, listeners, listenTo, sendTo);
     set(remote, methodName, rpc);
   });
 

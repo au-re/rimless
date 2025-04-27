@@ -1,4 +1,4 @@
-import { NodeWorker, Target, WorkerLike } from "./types";
+import { Guest, NodeWorker, Target, WorkerLike } from "./types";
 
 /**
  * check if run in a webworker
@@ -185,15 +185,15 @@ export function postMessageToTarget(target: Target, message: any, origin?: strin
   throw new Error("Rimless Error: Invalid target for postMessage");
 }
 
-export function isNodeWorker(target: Target | HTMLIFrameElement): target is NodeWorker {
-  return parentPort !== null && target === parentPort;
+export function isNodeWorker(guest: Guest | Target): guest is NodeWorker {
+  return parentPort !== null && guest === parentPort;
 }
 
-export function isWorkerLike(target: Target | HTMLIFrameElement): target is WorkerLike {
-  return isNodeWorker(target) || target instanceof Worker;
+export function isWorkerLike(guest: Guest): guest is WorkerLike {
+  return isNodeWorker(guest) || (typeof Worker !== "undefined" && guest instanceof Worker);
 }
 
-export function addEventListener(target: Target, event: string, handler: any) {
+export function addEventListener(target: Target, event: string, handler: EventListenerOrEventListenerObject) {
   if (isNodeWorker(target)) {
     target.on(event, handler);
   } else if ("addEventListener" in target) {
@@ -201,7 +201,7 @@ export function addEventListener(target: Target, event: string, handler: any) {
   }
 }
 
-export function removeEventListener(target: Target, event: string, handler: any) {
+export function removeEventListener(target: Target, event: string, handler: EventListenerOrEventListenerObject) {
   if (isNodeWorker(target)) {
     target.off(event, handler);
   } else if ("removeEventListener" in target) {
@@ -214,6 +214,6 @@ export function removeEventListener(target: Target, event: string, handler: any)
  * In web, data is in event.data
  * In Node.js, the event itself contains the data
  */
-export function getEventData(event: any): any {
+export function getEventData(event: any) {
   return event.data || event;
 }

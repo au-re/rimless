@@ -1,8 +1,8 @@
 import { extractMethods, getEventData, getTargetHost, postMessageToTarget } from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
-import { actions, EventHandlers, events, IConnection, ISchema } from "./types";
+import { actions, EventHandlers, events, Connection, Schema } from "./types";
 
-function connect(schema: ISchema = {}, eventHandlers?: EventHandlers): Promise<IConnection> {
+function connect(schema: Schema = {}, eventHandlers?: EventHandlers): Promise<Connection> {
   return new Promise(async (resolve) => {
     const localMethods = extractMethods(schema);
     const sendTo = getTargetHost();

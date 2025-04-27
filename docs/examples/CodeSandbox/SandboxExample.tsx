@@ -1,11 +1,11 @@
 import React, { useEffect } from "react";
 
-import { host, IConnection } from "../../../src/index";
+import { host, Connection } from "../../../src/index";
 import Worker from "./sandbox?worker";
 
 function SandboxExample() {
   const [message, setMessage] = React.useState<string | null>(null);
-  const [connection, setConnection] = React.useState<IConnection | null>(null);
+  const [connection, setConnection] = React.useState<Connection | null>(null);
 
   useEffect(() => {
     const api = {
@@ -15,9 +15,7 @@ function SandboxExample() {
       },
     };
     const worker = new Worker();
-    host.connect(worker, api).then((_connection) => {
-      setConnection(_connection);
-    });
+    host.connect(worker, api).then(setConnection);
   }, []);
 
   const onClick = async () => {

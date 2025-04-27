@@ -11,9 +11,9 @@ import {
   removeEventListener,
 } from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
-import { actions, events, Guest, IConnection, IConnections, ISchema } from "./types";
+import { actions, events, Guest, Connection, Connections, Schema } from "./types";
 
-const connections: IConnections = {};
+const connections: Connections = {};
 
 function isValidTarget(guest: Guest, event: any) {
   // If it's a worker, we don't need to validate origin
@@ -44,7 +44,7 @@ function isValidTarget(guest: Guest, event: any) {
  * @param schema
  * @returns Promise
  */
-function connect(guest: Guest, schema: ISchema = {}): Promise<IConnection> {
+function connect(guest: Guest, schema: Schema = {}): Promise<Connection> {
   if (!guest) throw new Error("a target is required");
 
   const guestIsWorker = isWorkerLike(guest);
@@ -99,7 +99,7 @@ function connect(guest: Guest, schema: ISchema = {}): Promise<IConnection> {
         }
       };
 
-      const connection: IConnection = { remote, close, id: connectionID };
+      const connection: Connection = { remote, close, id: connectionID };
       connections[connectionID] = connection;
     }
 

@@ -1,12 +1,12 @@
 import React, { useEffect } from "react";
 
-import { host, IConnection } from "../../src/index";
+import { host, Connection } from "../../src/index";
 import Worker from "./worker?worker";
 
 function WorkerExample() {
   const [color, setColor] = React.useState("#fff");
   const [message, setMessage] = React.useState("");
-  const [connection, setConnection] = React.useState<IConnection | null>(null);
+  const [connection, setConnection] = React.useState<Connection | null>(null);
 
   useEffect(() => {
     const options = { initialValue: "initial value from host" };

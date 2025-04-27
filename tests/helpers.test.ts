@@ -95,21 +95,25 @@ describe("environment detection", () => {
   });
 
   describe("isNodeEnv", () => {
-    const originalWindow = global.window;
+    const realProcess = global.process;
 
     afterEach(() => {
-      global.window = originalWindow;
+      // Put the genuine `process` back after every test
+      global.process = realProcess;
     });
 
-    it("returns true in Node.js environment", () => {
-      // @ts-expect-error - mocking node env
-      global.window = undefined;
+    it("returns true in a real Node.js environment", () => {
       expect(isNodeEnv()).toBe(true);
     });
 
-    it("returns false in browser environment", () => {
-      // @ts-expect-error - mocking browser env
-      global.window = {};
+    it("returns false when the global `process` is missing (browser-like)", () => {
+      global.process = undefined;
+      expect(isNodeEnv()).toBe(false);
+    });
+
+    it("returns false when `process` exists but has no `versions.node`", () => {
+      // Clone the real object so we don’t mutate the original
+      global.process = { ...realProcess, versions: {} } as unknown as NodeJS.Process;
       expect(isNodeEnv()).toBe(false);
     });
   });

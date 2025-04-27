@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import template from "./iframe.html?raw";
 
 import { host } from "../../src/index";
-import { IConnection } from "../../src/types";
+import { Connection } from "../../src/types";
 
 function makeRandomColor() {
   const letters = "0123456789ABCDEF";
@@ -17,14 +17,14 @@ function SingleIframeExample() {
   const iframe = React.useRef<HTMLIFrameElement | null>(null);
   const iframe2 = React.useRef<HTMLIFrameElement | null>(null);
   const [color, setColor] = React.useState("#fff");
-  const [connection, setConnection] = React.useState<IConnection | null>(null);
-  const [connection2, setConnection2] = React.useState<IConnection | null>(null);
+  const [connection, setConnection] = React.useState<Connection | null>(null);
+  const [connection2, setConnection2] = React.useState<Connection | null>(null);
 
   useEffect(() => {
     if (!iframe.current || !iframe2.current) return;
 
-    let conn1: IConnection | null = null;
-    let conn2: IConnection | null = null;
+    let conn1: Connection | null = null;
+    let conn2: Connection | null = null;
     let cancelled = false;
 
     (async () => {
