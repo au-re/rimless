@@ -1,12 +1,4 @@
-import {
-  addEventListener,
-  generateId,
-  get,
-  getEventData,
-  postMessageToTarget,
-  removeEventListener,
-  set,
-} from "./helpers";
+import { addEventListener, generateId, getEventData, postMessageToTarget, removeEventListener, set } from "./helpers";
 import {
   actions,
   Environment,
@@ -19,24 +11,22 @@ import {
 } from "./types";
 
 /**
- * for each function in the schema
+ * for each function in methods
  * 1. subscribe to an event that the remote can call
  * 2. listen for calls from the remote. When called execute the function and emit the results.
  *
- * @param methods an array of method ids from the local schema
+ * @param methods an object of method ids : methods from the local schema
  * @param rpcConnectionID
  * @return a function to cancel all subscriptions
  */
 export function registerLocalMethods(
-  schema: Schema = {},
-  methods: string[] = [],
+  methods: Record<string, (...args: any[]) => any> = {},
   rpcConnectionID: string,
   listenTo: Environment,
-  sendTo: Target,
+  sendTo: Target
 ) {
   const listeners: any[] = [];
-
-  methods.forEach((methodName) => {
+  for (const [methodName, method] of Object.entries(methods)) {
     // handle a remote calling a local method
     async function handleCall(event: any) {
       const eventData = getEventData(event);
@@ -58,7 +48,7 @@ export function registerLocalMethods(
 
       // run function and return the results to the remote
       try {
-        const result = await get(schema, methodName)(...args);
+        const result = await method(...args);
 
         if (!result) {
           // if the result is falsy (null, undefined, "", etc), set it directly
@@ -78,7 +68,7 @@ export function registerLocalMethods(
     // subscribe to the call event
     addEventListener(listenTo, events.MESSAGE, handleCall);
     listeners.push(() => removeEventListener(listenTo, events.MESSAGE, handleCall));
-  });
+  }
 
   return () => listeners.forEach((unregister) => unregister());
 }
@@ -101,7 +91,7 @@ export function createRPC(
   event: RimlessEvent,
   listeners: Array<() => void> = [],
   listenTo: Environment,
-  sendTo: Target,
+  sendTo: Target
 ) {
   return (...args: any) => {
     return new Promise((resolve, reject) => {
@@ -140,7 +130,7 @@ export function createRPC(
 }
 
 /**
- * create an object based on the remote schema and methods. Functions in that object will
+ * create an object based on the remote schema's methods. Functions in that object will
  * emit an event that will trigger the RPC on the remote.
  *
  * @param schema
@@ -151,19 +141,19 @@ export function createRPC(
  */
 export function registerRemoteMethods(
   schema: Schema = {},
-  methods: string[] = [],
+  methodNames: Iterable<string> = [],
   connectionID: string,
   event: RimlessEvent,
   listenTo: Environment,
-  sendTo: Target,
+  sendTo: Target
 ) {
   const remote = { ...schema };
   const listeners: Array<() => void> = [];
 
-  methods.forEach((methodName) => {
+  for (const methodName of methodNames) {
     const rpc = createRPC(methodName, connectionID, event, listeners, listenTo, sendTo);
     set(remote, methodName, rpc);
-  });
+  }
 
   return {
     remote,

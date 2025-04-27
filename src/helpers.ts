@@ -34,7 +34,7 @@ export function isIframe() {
  * @param obj
  */
 export function extractMethods(obj: any) {
-  const paths: string[] = [];
+  const methods: Record<string, (...args: any) => any> = {};
   (function parse(obj: any, path = "") {
     Object.keys(obj).forEach((prop) => {
       const propPath = path ? `${path}.${prop}` : prop;
@@ -42,11 +42,12 @@ export function extractMethods(obj: any) {
         parse(obj[prop], propPath);
       }
       if (typeof obj[prop] === "function") {
-        paths.push(propPath);
+        methods[propPath] = obj[prop];
+        delete obj[prop];
       }
     });
   })(obj);
-  return paths;
+  return methods;
 }
 
 const urlRegex = /^(https?:|file:)?\/\/([^/:]+)?(:(\d+))?/;
