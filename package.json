@@ -9,9 +9,12 @@
   "main": "lib/rimless.js",
   "module": "lib/rimless.js",
   "types": "lib/index.d.ts",
-  "files": ["lib"],
+  "files": [
+    "lib"
+  ],
   "scripts": {
     "dev": "vite",
+    "format": "npx prettier --check \"./src/**/*.{js,jsx,ts,tsx,css,scss,html,md}\" --write",
     "build": "tsc -b && vite build",
     "lint": "eslint . --ignore-pattern='lib/*' --ignore-pattern='lib/**' --ignore-pattern '**/*.min.js'",
     "test": "vitest run",

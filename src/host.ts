@@ -1,20 +1,21 @@
 import {
+  addEventListener,
   extractMethods,
   generateId,
+  getEventData,
   getOriginFromURL,
   isNodeEnv,
-  addEventListener,
-  removeEventListener,
   isNodeWorker,
-  NodeWorker,
-  getEventData,
+  isWorkerLike,
+  postMessageToTarget,
+  removeEventListener,
 } from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
-import { actions, events, IConnection, IConnections, ISchema } from "./types";
+import { actions, events, Guest, Connection, Connections, Schema } from "./types";
 
-const connections: IConnections = {};
+const connections: Connections = {};
 
-function isValidTarget(guest: HTMLIFrameElement | Worker | NodeWorker, event: any) {
+function isValidTarget(guest: Guest, event: any) {
   // If it's a worker, we don't need to validate origin
   if (isNodeWorker(guest) || (typeof Worker !== "undefined" && guest instanceof Worker)) {
     return true;
@@ -43,31 +44,29 @@ function isValidTarget(guest: HTMLIFrameElement | Worker | NodeWorker, event: an
  * @param schema
  * @returns Promise
  */
-function connect(guest: HTMLIFrameElement | Worker | NodeWorker, schema: ISchema = {}): Promise<IConnection> {
+function connect(guest: Guest, schema: Schema = {}): Promise<Connection> {
   if (!guest) throw new Error("a target is required");
 
-  const guestIsWorker =
-    isNodeWorker(guest) || ((guest as Worker).onerror !== undefined && (guest as Worker).onmessage !== undefined);
-  const listeners = guestIsWorker || isNodeEnv() ? guest : window;
+  const guestIsWorker = isWorkerLike(guest);
+
+  const listenTo = guestIsWorker || isNodeEnv() ? (guest as Worker) : window;
 
   return new Promise((resolve) => {
     const connectionID = generateId();
 
     // on handshake request
     function handleHandshake(event: any) {
+      const sendTo = guestIsWorker || isNodeEnv() ? (guest as Worker) : event.source;
+
       if (!guestIsWorker && !isNodeEnv() && !isValidTarget(guest, event)) return;
 
       const eventData = getEventData(event);
       if (eventData?.action !== actions.HANDSHAKE_REQUEST) return;
+      if (connections[connectionID]) return;
 
       // register local methods
       const localMethods = extractMethods(schema);
-      const unregisterLocal = registerLocalMethods(
-        schema,
-        localMethods,
-        connectionID,
-        guestIsWorker || isNodeEnv() ? (guest as Worker) : undefined,
-      );
+      const unregisterLocal = registerLocalMethods(schema, localMethods, connectionID, listenTo, sendTo);
 
       // register remote methods
       const { remote, unregisterRemote } = registerRemoteMethods(
@@ -75,23 +74,24 @@ function connect(guest: HTMLIFrameElement | Worker | NodeWorker, schema: ISchema
         eventData.methods,
         connectionID,
         event,
-        guestIsWorker || isNodeEnv() ? (guest as Worker) : undefined,
+        listenTo,
+        sendTo,
       );
 
+      // send a HANDSHAKE REPLY to the guest
       const payload = {
         action: actions.HANDSHAKE_REPLY,
         connectionID,
+        schema,
         methods: localMethods,
-        schema: JSON.parse(JSON.stringify(schema)),
       };
 
-      // confirm the connection
-      if (guestIsWorker) (guest as Worker).postMessage(payload);
-      else event.source.postMessage(payload, event.origin);
+      postMessageToTarget(sendTo, payload, event.origin);
 
       // close the connection and all listeners when called
       const close = () => {
-        removeEventListener(listeners, events.MESSAGE, handleHandshake);
+        delete connections[connectionID];
+        removeEventListener(listenTo, events.MESSAGE, handleHandshake);
         unregisterRemote();
         unregisterLocal();
         if (guestIsWorker) {
@@ -99,21 +99,27 @@ function connect(guest: HTMLIFrameElement | Worker | NodeWorker, schema: ISchema
         }
       };
 
-      const connection: IConnection = { remote, close };
+      const connection: Connection = { remote, close, id: connectionID };
       connections[connectionID] = connection;
     }
 
     // subscribe to HANDSHAKE MESSAGES
-    addEventListener(listeners, events.MESSAGE, handleHandshake);
+    addEventListener(listenTo, events.MESSAGE, handleHandshake);
 
     // on handshake reply
     function handleHandshakeReply(event: any) {
       const eventData = getEventData(event);
       if (eventData?.action !== actions.HANDSHAKE_REPLY) return;
+      if (connectionID !== eventData.connectionID) return;
+
+      if (!connections[eventData.connectionID]) {
+        throw new Error("Rimless Error: No connection found for this connectionID");
+      }
+
       return resolve(connections[eventData.connectionID]);
     }
 
-    addEventListener(listeners, events.MESSAGE, handleHandshakeReply);
+    addEventListener(listenTo, events.MESSAGE, handleHandshakeReply);
   });
 }
 

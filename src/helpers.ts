@@ -1,7 +1,9 @@
+import { Guest, NodeWorker, Target, WorkerLike } from "./types";
+
 /**
  * check if run in a webworker
  *
- * @param event
+ * @returns boolean
  */
 export function isWorker(): boolean {
   return typeof window === "undefined" && typeof self !== "undefined";
@@ -9,9 +11,20 @@ export function isWorker(): boolean {
 
 /**
  * check if run in a Node.js environment
+ *
+ * @returns boolean
  */
 export function isNodeEnv(): boolean {
-  return typeof window === "undefined";
+  return typeof process !== "undefined" && !!(process as any).versions?.node;
+}
+
+/**
+ * check if run in an iframe
+ *
+ * @returns boolean
+ */
+export function isIframe() {
+  return window.self !== window.top;
 }
 
 /**
@@ -108,35 +121,79 @@ export function generateId(length: number = 10): string {
   return result;
 }
 
-export interface NodeWorker {
-  on(event: string, handler: any): void;
-  off(event: string, handler: any): void;
-  postMessage(message: any): void;
-  terminate(): void;
-}
-
-// Type that captures common properties between Web Workers and Node Workers
-export type WorkerLike = Worker | NodeWorker;
-
-let NodeWorkerClass: any = null;
+let parentPort: any = null;
 
 if (isNodeEnv()) {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const workerThreads = require("worker_threads");
-    NodeWorkerClass = workerThreads.Worker;
-  } catch {}
+    parentPort = workerThreads.parentPort;
+  } catch (e) {
+    // Not in worker thread context
+  }
 }
 
-export function isNodeWorker(target: any): target is NodeWorker {
-  return NodeWorkerClass !== null && target instanceof NodeWorkerClass;
+/**
+ * Get the appropriate target host for messaging based on the current environment
+ * @returns The messaging target for the current environment
+ */
+export function getTargetHost(): any {
+  if (isNodeEnv()) {
+    return parentPort;
+  }
+
+  if (isWorker()) {
+    return self;
+  }
+
+  if (isIframe()) {
+    return window.parent;
+  }
+
+  throw new Error("No valid target found for postMessage");
 }
 
-export function isWorkerLike(target: any): target is WorkerLike {
-  return isNodeWorker(target) || target instanceof Worker;
+/**
+ * Send a message to a target, handling different environments (iframe, web worker, node worker)
+ * @param target The target to send the message to
+ * @param message The message to send
+ * @param origin Optional origin for iframe communication
+ */
+export function postMessageToTarget(target: Target, message: any, origin?: string): void {
+  if (!target) {
+    throw new Error("Rimless Error: No target specified for postMessage");
+  }
+
+  // Node.js Worker
+  if (isNodeEnv() && target === parentPort) {
+    target.postMessage(JSON.parse(JSON.stringify(message)));
+    return;
+  }
+
+  // Web Worker
+  if (isWorker()) {
+    target.postMessage(JSON.parse(JSON.stringify(message)));
+    return;
+  }
+
+  // iframe or window
+  if (target.postMessage) {
+    target.postMessage(JSON.parse(JSON.stringify(message)), { targetOrigin: origin || "*" });
+    return;
+  }
+
+  throw new Error("Rimless Error: Invalid target for postMessage");
 }
 
-export function addEventListener(target: Window | WorkerLike | HTMLIFrameElement, event: string, handler: any) {
+export function isNodeWorker(guest: Guest | Target): guest is NodeWorker {
+  return parentPort !== null && guest === parentPort;
+}
+
+export function isWorkerLike(guest: Guest): guest is WorkerLike {
+  return isNodeWorker(guest) || (typeof Worker !== "undefined" && guest instanceof Worker);
+}
+
+export function addEventListener(target: Target, event: string, handler: EventListenerOrEventListenerObject) {
   if (isNodeWorker(target)) {
     target.on(event, handler);
   } else if ("addEventListener" in target) {
@@ -144,7 +201,7 @@ export function addEventListener(target: Window | WorkerLike | HTMLIFrameElement
   }
 }
 
-export function removeEventListener(target: Window | WorkerLike | HTMLIFrameElement, event: string, handler: any) {
+export function removeEventListener(target: Target, event: string, handler: EventListenerOrEventListenerObject) {
   if (isNodeWorker(target)) {
     target.off(event, handler);
   } else if ("removeEventListener" in target) {
@@ -157,6 +214,6 @@ export function removeEventListener(target: Window | WorkerLike | HTMLIFrameElem
  * In web, data is in event.data
  * In Node.js, the event itself contains the data
  */
-export function getEventData(event: any): any {
+export function getEventData(event: any) {
   return event.data || event;
 }

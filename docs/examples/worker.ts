@@ -19,13 +19,13 @@ const run = async () => {
       {
         createColor,
         getMessage,
+        helloFrom: "worker",
       },
       {
         onConnectionSetup: async (config) => {
-          console.log("Connection setup with config:", config);
           (self as any).config = config;
         },
-      }
+      },
     );
   } catch (e) {
     console.error(e);

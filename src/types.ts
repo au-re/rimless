@@ -1,3 +1,12 @@
+export interface NodeWorker {
+  on(event: string, handler: any): void;
+  off(event: string, handler: any): void;
+  postMessage(message: any): void;
+  terminate(): void;
+}
+
+export type WorkerLike = Worker | NodeWorker;
+
 export enum events {
   MESSAGE = "message",
 }
@@ -10,48 +19,45 @@ export enum actions {
   RPC_REJECT = "RIMLESS/RPC_REJECT",
 }
 
-export interface ISchema {
-  [prop: string]: any;
-}
+export type Schema = Record<string, any>;
 
-export interface IConnection {
-  remote: ISchema;
+export interface Connection {
+  id: string;
+  remote: Schema;
   close: () => void;
 }
 
-export interface IConnections {
-  [connectionID: string]: IConnection;
-}
+export type Connections = Record<string, Connection>;
 
-export interface IEvent extends EventListener {
+export interface RimlessEvent extends EventListener {
   source?: Window;
   origin?: string;
-  data?: IHandshakeRequestPayload | IHandshakeConfirmationPayload | IRPCRequestPayload | IRPCResolvePayload;
+  data: HandshakeRequestPayload | HandshakeConfirmationPayload | RPCRequestPayload | RPCResolvePayload;
 }
 
-export interface IHandshakeRequestPayload {
+export interface HandshakeRequestPayload {
   action: actions.HANDSHAKE_REQUEST;
-  connectionID?: string;
-  methods: any[];
-  schema: ISchema;
+  connectionID: string;
+  methods: string[];
+  schema: Schema;
 }
 
-export interface IHandshakeConfirmationPayload {
+export interface HandshakeConfirmationPayload {
   action: actions.HANDSHAKE_REPLY;
   connectionID: string;
-  methods: any[];
-  schema: ISchema;
+  methods: string[];
+  schema: Schema;
 }
 
-export interface IRPCRequestPayload {
+export interface RPCRequestPayload {
   action: actions.RPC_REQUEST;
   args: any[];
   callID: string;
   callName: string;
-  connectionID?: string;
+  connectionID: string;
 }
 
-export interface IRPCResolvePayload {
+export interface RPCResolvePayload {
   action: actions.RPC_RESOLVE | actions.RPC_REJECT;
   result?: any | null;
   error?: Error | null;
@@ -61,5 +67,9 @@ export interface IRPCResolvePayload {
 }
 
 export interface EventHandlers {
-  onConnectionSetup: (remote: ISchema) => Promise<void>;
+  onConnectionSetup: (remote: Schema) => Promise<void>;
 }
+
+export type Guest = WorkerLike | HTMLIFrameElement;
+export type Target = Window | WorkerLike;
+export type Environment = Window | WorkerLike;
