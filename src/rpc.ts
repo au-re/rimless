@@ -23,7 +23,7 @@ export function registerLocalMethods(
   schema: ISchema = {},
   methods: any[] = [],
   _connectionID: string,
-  guest?: Worker,
+  guest?: Worker
 ): any {
   const listeners: any[] = [];
   methods.forEach((methodName) => {
@@ -49,7 +49,14 @@ export function registerLocalMethods(
       // run function and return the results to the remote
       try {
         const result = await get(schema, methodName)(...args);
-        payload.result = JSON.parse(JSON.stringify(result || {}));
+
+        if (!result) {
+          // if the result is falsy (null, undefined, "", etc), set it directly
+          payload.result = result;
+        } else {
+          // otherwise parse a stringified version of it
+          payload.result = JSON.parse(JSON.stringify(result));
+        }
       } catch (error) {
         payload.action = actions.RPC_REJECT;
         payload.error = JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
@@ -90,7 +97,7 @@ export function createRPC(
   _connectionID: string,
   event: any,
   listeners: Array<() => void> = [],
-  guest?: Worker,
+  guest?: Worker
 ) {
   return (...args: any) => {
     return new Promise((resolve, reject) => {
@@ -149,7 +156,7 @@ export function registerRemoteMethods(
   methods: any[] = [],
   _connectionID: string,
   event: any,
-  guest?: Worker,
+  guest?: Worker
 ) {
   const remote = { ...schema };
   const listeners: Array<() => void> = [];
