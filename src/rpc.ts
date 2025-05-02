@@ -17,13 +17,17 @@ import {
  *
  * @param methods an object of method ids : methods from the local schema
  * @param rpcConnectionID
+ * @param listenTo Environment to listen for incoming messages
+ * @param sendTo Target to send outgoing messages
+ * @param remote The remote API object for the current connection
  * @return a function to cancel all subscriptions
  */
 export function registerLocalMethods(
   methods: Record<string, (...args: any[]) => any> = {},
   rpcConnectionID: string,
   listenTo: Environment,
-  sendTo: Target
+  sendTo: Target,
+  remote: Schema, // Add remote parameter
 ) {
   const listeners: any[] = [];
   for (const [methodName, method] of Object.entries(methods)) {
@@ -48,7 +52,8 @@ export function registerLocalMethods(
 
       // run function and return the results to the remote
       try {
-        const result = await method(...args);
+        // Pass the remote object as the LAST argument to the local method
+        const result = await method(...args, remote);
 
         if (!result) {
           // if the result is falsy (null, undefined, "", etc), set it directly
@@ -91,7 +96,7 @@ export function createRPC(
   event: RimlessEvent,
   listeners: Array<() => void> = [],
   listenTo: Environment,
-  sendTo: Target
+  sendTo: Target,
 ) {
   return (...args: any) => {
     return new Promise((resolve, reject) => {
@@ -145,7 +150,7 @@ export function registerRemoteMethods(
   connectionID: string,
   event: RimlessEvent,
   listenTo: Environment,
-  sendTo: Target
+  sendTo: Target,
 ) {
   const remote = { ...schema };
   const listeners: Array<() => void> = [];

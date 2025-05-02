@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import template from "./iframe.html?raw";
 
-import { host } from "../../src/index";
-import { Connection } from "../../src/types";
+import { host } from "../../../src/index";
+import { Connection } from "../../../src/types";
 
 function makeRandomColor() {
   const letters = "0123456789ABCDEF";
@@ -13,7 +13,7 @@ function makeRandomColor() {
   return color;
 }
 
-function SingleIframeExample() {
+function IframesExample() {
   const iframe = React.useRef<HTMLIFrameElement | null>(null);
   const iframe2 = React.useRef<HTMLIFrameElement | null>(null);
   const [color, setColor] = React.useState("#fff");
@@ -93,4 +93,4 @@ function SingleIframeExample() {
   );
 }
 
-export default SingleIframeExample;
+export default IframesExample;

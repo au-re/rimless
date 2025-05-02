@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 
-import { host, Connection } from "../../src/index";
+import { host, Connection } from "../../../src/index";
 import Worker from "./worker?worker";
 
 function WorkerExample() {
@@ -9,7 +9,7 @@ function WorkerExample() {
   const [connection, setConnection] = React.useState<Connection | null>(null);
 
   useEffect(() => {
-    const options = { initialValue: "initial value from host" };
+    const options = { initialValue: "initial value from host", getHostMessage: () => "Hello from host!" };
     const worker = new Worker();
     host.connect(worker, options).then((_connection) => {
       setConnection(_connection);
@@ -33,7 +33,7 @@ function WorkerExample() {
         <button type="button" onClick={onClick}>
           call web worker function
         </button>
-        <p>{message}</p>
+        <pre>{message}</pre>
       </div>
     </div>
   );

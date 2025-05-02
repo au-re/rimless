@@ -64,19 +64,21 @@ function connect(guest: Guest, schema: Schema = {}): Promise<Connection> {
       if (eventData?.action !== actions.HANDSHAKE_REQUEST) return;
       if (connections[connectionID]) return;
 
-      // register local methods
+      // Extract local methods first (doesn't need remote yet)
       const localMethods = extractMethods(schema);
-      const unregisterLocal = registerLocalMethods(localMethods, connectionID, listenTo, sendTo);
 
-      // register remote methods
+      // Register remote methods first to get the remote object
       const { remote, unregisterRemote } = registerRemoteMethods(
         eventData.schema,
         eventData.methodNames,
         connectionID,
         event,
         listenTo,
-        sendTo
+        sendTo,
       );
+
+      // Now register local methods, passing the remote object
+      const unregisterLocal = registerLocalMethods(localMethods, connectionID, listenTo, sendTo, remote);
 
       // send a HANDSHAKE REPLY to the guest
       const payload = {
