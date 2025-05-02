@@ -14,16 +14,16 @@ function connect(schema: Schema = {}, eventHandlers?: EventHandlers): Promise<Co
       if (eventData?.action !== actions.HANDSHAKE_REPLY) return;
 
       // register local methods
-      const unregisterLocal = registerLocalMethods(schema, localMethods, eventData.connectionID, listenTo, sendTo);
+      const unregisterLocal = registerLocalMethods(localMethods, eventData.connectionID, listenTo, sendTo);
 
       // register remote methods
       const { remote, unregisterRemote } = registerRemoteMethods(
         eventData.schema,
-        eventData.methods,
+        eventData.methodNames,
         eventData.connectionID,
         event,
         listenTo,
-        sendTo,
+        sendTo
       );
 
       await eventHandlers?.onConnectionSetup?.(remote);
@@ -53,8 +53,8 @@ function connect(schema: Schema = {}, eventHandlers?: EventHandlers): Promise<Co
 
     const payload = {
       action: actions.HANDSHAKE_REQUEST,
-      methods: localMethods,
-      schema: JSON.parse(JSON.stringify(schema)),
+      methodNames: Object.keys(localMethods),
+      schema: schema,
     };
 
     postMessageToTarget(sendTo, payload);

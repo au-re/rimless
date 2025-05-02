@@ -25,20 +25,45 @@ describe("extract functions", () => {
     },
   };
 
-  it("returns empty array when no functions", () => {
-    expect(extractMethods(noFunctions)).toEqual([]);
+  it("extracts and returns empty object when no functions", () => {
+    expect(extractMethods(noFunctions)).toEqual({});
   });
 
-  it("returns single function path", () => {
-    expect(extractMethods(singleFunction)).toEqual(["foo"]);
+  it("extracts and returns a single function path : fn pair", () => {
+    const { foo } = singleFunction;
+
+    expect(extractMethods(singleFunction)).toEqual({ foo });
+
+    // deletes the function from the original object
+    expect(singleFunction).toEqual({ foo: undefined });
   });
 
-  it("returns multiple function paths", () => {
-    expect(extractMethods(multipleFunctions).sort()).toEqual(["foo", "bar"].sort());
+  it("extracts and returns multiple function path : fn pairs", () => {
+    const { foo, bar } = multipleFunctions;
+
+    expect(extractMethods(multipleFunctions)).toEqual({ foo, bar });
+
+    // deletes the functions from the original object
+    expect(multipleFunctions).toEqual({ foo: undefined, bar: undefined });
   });
 
-  it("returns nested function paths", () => {
-    expect(extractMethods(nestedFunctions).sort()).toEqual(["foo.bar.baz", "foo.foo"].sort());
+  it("extracts and returns a flat object with nested function path : fn pairs", () => {
+    const {
+      foo: {
+        foo,
+        bar: { baz },
+      },
+    } = nestedFunctions;
+
+    expect(extractMethods(nestedFunctions)).toEqual({
+      "foo.bar.baz": baz,
+      "foo.foo": foo,
+    });
+
+    // deletes the functions from the original object
+    expect(nestedFunctions).toEqual({
+      foo: { bar: { baz: undefined }, foo: undefined },
+    });
   });
 
   it("handles null and undefined values", () => {
@@ -47,7 +72,12 @@ describe("extract functions", () => {
       bar: undefined,
       baz: () => {},
     };
-    expect(extractMethods(withNulls)).toEqual(["baz"]);
+    const { baz } = withNulls;
+
+    expect(extractMethods(withNulls)).toEqual({ baz });
+
+    // deletes the function from the original object
+    expect(withNulls).toEqual({ foo: null, bar: undefined, baz: undefined });
   });
 
   it("handles arrays of functions", () => {
@@ -55,7 +85,16 @@ describe("extract functions", () => {
       foo: [() => {}, () => {}],
       bar: () => {},
     };
-    expect(extractMethods(withArrays).sort()).toEqual(["foo.0", "foo.1", "bar"].sort());
+    const {
+      foo: [foo0, foo1],
+      bar,
+    } = withArrays;
+
+    expect(extractMethods(withArrays)).toEqual({
+      "foo.0": foo0,
+      "foo.1": foo1,
+      bar: bar,
+    });
   });
 });
 

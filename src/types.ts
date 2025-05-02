@@ -38,14 +38,14 @@ export interface RimlessEvent extends EventListener {
 export interface HandshakeRequestPayload {
   action: actions.HANDSHAKE_REQUEST;
   connectionID: string;
-  methods: string[];
+  methodNames: string[];
   schema: Schema;
 }
 
 export interface HandshakeConfirmationPayload {
   action: actions.HANDSHAKE_REPLY;
   connectionID: string;
-  methods: string[];
+  methodNames: string[];
   schema: Schema;
 }
 
