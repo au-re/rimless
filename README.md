@@ -42,49 +42,68 @@ or from a CDN
 
 ## Example Usage
 
-**in the host website**
+Below is a minimal but complete round‑trip that shows how each side can:
+
+1. expose variables and functions,
+2. read the other side’s variables,
+3. invoke the other side’s functions,
+4. finally close the link.
+
+**Host (page that embeds the iframe)**
 
 ```js
 import { host } from "rimless";
 
-const connection = await host.connect(iframe, {
+const iframe = document.getElementById("myIframe");
+
+// Everything inside this object is exported to the guest
+const hostApi = {
   someHostVariable: 12,
   someHostFunction: (value) => `hello ${value}`,
-});
+};
 
-// access variables on the iframe
-console.log(connection.remote.someGuestVariable); // 42
+const connection = await host.connect(iframe, hostApi);
 
-// call remote procedures on the iframe
+// ↘︎  Access data that the iframe exposed
+console.log(connection.remote.someGuestVariable); // → 42
+
+// ↘︎  Call a guest‑side RPC and await its result
 const result = await connection.remote.someGuestFunction("here");
+console.log(result); // → "hello here"
 
-console.log(result); // hello here
-
-// close the connection
+// Done talking? Tear down the channel.
 connection.close();
 ```
 
-**in the iframe**
+**Guest (code that runs inside the iframe)**
 
 ```js
 import { guest } from "rimless";
 
-const connection = await guest.connect({
+// The object you pass to guest.connect is your public surface
+const guestApi = {
   someGuestVariable: 42,
   someGuestFunction: (value) => `hello ${value}`,
-});
+};
 
-// access variables on the host
-console.log(connection.remote.someHostVariable); // 12
+const connection = await guest.connect(guestApi);
 
-// call remote procedures on host
+// ↗︎  Read a host‑side value
+console.log(connection.remote.someHostVariable); // → 12
+
+// ↗︎  Invoke a host‑side RPC
 const res = await connection.remote.someHostFunction("there");
+console.log(res); // → "hello there"
 
-console.log(res); // hello there
-
-// close the connection
+// Close when finished to free resources
 connection.close();
 ```
+
+**What to remember**
+
+- `connection.remote` is the automatically generated proxy for the other side’s exports.
+- Every remote call returns a Promise, so feel free to await it.
+- Always call `connection.close()` when you no longer need the tunnel—this removes event listeners and avoids memory leaks.
 
 ---
 
@@ -160,6 +179,59 @@ guest.connect().then((connection) => {
   connection.remote.setColor("#011627");
 });
 ```
+
+### Calling the remote from an RPC
+
+Every RPC handler you expose receives the caller’s method collection as its last parameter—conventionally named `remote`.
+That means an RPC can immediately call back into the opposite context to acknowledge success, return extra data, or kick‑off a follow‑up action.
+
+**Why it’s useful**
+
+- Confirm completion – send a quick “done!” message when a long‑running task finishes.
+- Chain operations – perform a host‑side update, then ask the guest to re‑render.
+- Stream results – push incremental data to the caller instead of waiting for one big response.
+
+```js
+// host (parent window)
+import { host } from "rimless";
+
+const api = {
+  /**
+   * Change the page background, then notify the guest.
+   * @param {string} color  Hex or CSS color string
+   * @param {object} remote Automatically injected guest‑side RPCs
+   */
+  setColor: (color, remote) => {
+    document.body.style.background = color;
+    remote.logMessage("Background updated ✔︎");
+  },
+};
+
+const iframe = document.getElementById("myIframe");
+host.connect(iframe, api);
+```
+
+```js
+// guest (inside the iframe)
+import { guest } from "rimless";
+
+const api = {
+  /** Show messages from the host */
+  logMessage: (msg) => console.log(msg),
+};
+
+const { remote } = await guest.connect(api);
+
+// Ask the host to change its background.
+// Afterwards, the guest will receive logMessage("Background updated ✔︎").
+remote.setColor("#011627");
+```
+
+**Key points**
+
+- Handler signature – (…args, remote); you can ignore remote if you don’t need it.
+- Promises everywhere – RPC calls return promises, so you can await remote.someMethod().
+- Keep it short – avoid deep call‑chains that bounce endlessly between host and guest.
 
 ### Closing a connection
 

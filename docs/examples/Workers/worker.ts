@@ -9,8 +9,11 @@ function createColor() {
   return color;
 }
 
-function getMessage() {
-  return "Hello from the worker! Initialized with:" + (self as any).config?.initialValue;
+async function getMessage(remote) {
+  const hostMessage = await remote.getHostMessage();
+  return `Hello from worker!
+Host message: ${hostMessage}
+Initial Values: ${(self as any).config?.initialValue}`;
 }
 
 const run = async () => {
