@@ -1,4 +1,4 @@
-import { guest } from "../../src/index";
+import { guest } from "../../../src/index";
 
 function createColor() {
   const letters = "0123456789ABCDEF";

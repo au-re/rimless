@@ -1,4 +1,11 @@
-import { extractMethods, getEventData, getTargetHost, postMessageToTarget } from "./helpers";
+import {
+  extractMethods,
+  getEventData,
+  getTargetHost,
+  postMessageToTarget,
+  addEventListener,
+  removeEventListener,
+} from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
 import { actions, EventHandlers, events, Connection, Schema } from "./types";
 
@@ -13,9 +20,6 @@ function connect(schema: Schema = {}, eventHandlers?: EventHandlers): Promise<Co
       const eventData = getEventData(event);
       if (eventData?.action !== actions.HANDSHAKE_REPLY) return;
 
-      // register local methods
-      const unregisterLocal = registerLocalMethods(localMethods, eventData.connectionID, listenTo, sendTo);
-
       // register remote methods
       const { remote, unregisterRemote } = registerRemoteMethods(
         eventData.schema,
@@ -23,8 +27,11 @@ function connect(schema: Schema = {}, eventHandlers?: EventHandlers): Promise<Co
         eventData.connectionID,
         event,
         listenTo,
-        sendTo
+        sendTo,
       );
+
+      // register local methods, passing the remote object
+      const unregisterLocal = registerLocalMethods(localMethods, eventData.connectionID, listenTo, sendTo, remote);
 
       await eventHandlers?.onConnectionSetup?.(remote);
 
@@ -38,7 +45,7 @@ function connect(schema: Schema = {}, eventHandlers?: EventHandlers): Promise<Co
 
       // close the connection and all listeners when called
       const close = () => {
-        self.removeEventListener(events.MESSAGE, handleHandshakeResponse);
+        removeEventListener(listenTo, events.MESSAGE, handleHandshakeResponse);
         unregisterRemote();
         unregisterLocal();
       };
@@ -49,7 +56,7 @@ function connect(schema: Schema = {}, eventHandlers?: EventHandlers): Promise<Co
     }
 
     // subscribe to HANDSHAKE RESPONSE MESSAGES
-    self.addEventListener(events.MESSAGE, handleHandshakeResponse);
+    addEventListener(listenTo, events.MESSAGE, handleHandshakeResponse);
 
     const payload = {
       action: actions.HANDSHAKE_REQUEST,
