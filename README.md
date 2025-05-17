@@ -148,7 +148,7 @@ guest.connect();
 
 ### Exposing an API
 
-To do anything meaningful with this connection you need to provide a schema that defines **the API** of the host/iframe/webworker. Any serializeable values as well as functions are ok to use. In the example below the host website provides a function that will update its background color when invoked.
+To do anything meaningful with this connection you need to provide a schema that defines **the API** of the host/iframe/webworker. Any serializable values as well as functions are ok to use. In the example below the host website provides a function that will update its background color when invoked.
 
 ```js
 import { host } from "rimless";
@@ -259,7 +259,7 @@ Now both can make use of the APIs they have shared with each other, e.g.
 
 ## Limitations
 
-All parameters passed through `postMessage` need to be serializeable. This applies also for all return values of the functions you expose.
+All parameters passed through `postMessage` need to be serializable. This applies also for all return values of the functions you expose.
 
 ```js
 // someFunction would return undefined when called in the remote.
