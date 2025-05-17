@@ -94,6 +94,7 @@ function connect(guest: Guest, schema: Schema = {}): Promise<Connection> {
       const close = () => {
         delete connections[connectionID];
         removeEventListener(listenTo, events.MESSAGE, handleHandshake);
+        removeEventListener(listenTo, events.MESSAGE, handleHandshakeReply);
         unregisterRemote();
         unregisterLocal();
         if (guestIsWorker) {
