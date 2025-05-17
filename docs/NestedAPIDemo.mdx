@@ -1,0 +1,25 @@
+import { Meta } from "@storybook/blocks";
+import NestedExample from "./examples/Nested/NestedExample";
+
+<Meta title="Nested API Demo" />
+
+# Nested Methods
+
+Rimless supports nested method schemas. Remote APIs can expose deeply nested
+functions and you can access them using dot notation on the `remote` object.
+
+For example, a worker may expose:
+
+```ts
+{
+  user: {
+    profile: {
+      get: () => ({ name: "Alice", age: 30 })
+    }
+  }
+}
+```
+
+You can call this from the host with `remote.user.profile.get()`.
+
+<NestedExample />
