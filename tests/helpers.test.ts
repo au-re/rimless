@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { extractMethods, isWorker, isNodeEnv, getOriginFromURL } from "../src/helpers";
+import { extractMethods, isWorker, isNodeEnv, getOriginFromURL, set } from "../src/helpers";
 
 describe("extract functions", () => {
   const noFunctions = {
@@ -184,5 +184,19 @@ describe("getOriginFromURL", () => {
   it("handles URLs with default ports", () => {
     expect(getOriginFromURL("http://example.com:80/path")).toBe("http://example.com");
     expect(getOriginFromURL("https://example.com:443/path")).toBe("https://example.com");
+  });
+});
+
+describe("set", () => {
+  it("assigns value for simple object paths", () => {
+    const obj: any = {};
+    set(obj, "foo.bar", 1);
+    expect(obj).toEqual({ foo: { bar: 1 } });
+  });
+
+  it("assigns value for nested array indices", () => {
+    const obj: any = {};
+    set(obj, "arr.0", "first");
+    expect(obj).toEqual({ arr: ["first"] });
   });
 });
