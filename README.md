@@ -14,9 +14,9 @@
 [![Commitizen friendly][commitizen-image]][commitizen-url]
 ![npm bundle size](https://img.shields.io/bundlephobia/minzip/rimless)
 
-> Rimless makes event based communication easy with a promise-based API wrapping [postMessage](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage). Works with both **iframes** and **webworkers**.
+> Rimless makes event based communication easy with a promise-based API wrapping [postMessage](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage). Works with **iframes**, **webworkers**, and **Node.js worker threads**.
 
-You can use `rimless` to call remote procedures, exchange data or expose local functions with **iframes**/**webworkers**.
+You can use `rimless` to call remote procedures, exchange data or expose local functions with **iframes**, **webworkers**, or **Node.js workers**.
 
 You can see it in action in the code sandbox below:
 
@@ -203,7 +203,7 @@ const api = {
    */
   setColor: (color, remote) => {
     document.body.style.background = color;
-    remote.logMessage("Background updated ✔︎");
+    remote.logMessage("Background updated ✔");
   },
 };
 
@@ -223,7 +223,7 @@ const api = {
 const { remote } = await guest.connect(api);
 
 // Ask the host to change its background.
-// Afterwards, the guest will receive logMessage("Background updated ✔︎").
+// Afterwards, the guest will receive logMessage("Background updated ✔").
 remote.setColor("#011627");
 ```
 
@@ -275,9 +275,11 @@ This library is inspired by [Postmate](https://www.npmjs.com/package/postmate) a
 ### So why does this library exist?
 
 - works with webworkers!
+- works with Node.js worker threads
 - does not create the iframe (easier to work with libraries like react)
 - works with iframes using srcdoc
 - works with multiple iframes from the same origin
+- remote RPC handlers receive the caller's API as the last argument
 
 ---
 
@@ -299,7 +301,6 @@ host.connect(iframe, {
 | --------- | ------------------------------- | ------------------------------------ | -------- |
 | `guest`   | `HTMLIFrameElement` or `Worker` | Target of the connection             | required |
 | `schema`  | `object`                        | schema of the api you want to expose | -        |
-| `options` | `object`                        | -                                    | -        |
 
 > ### `guest.connect`
 
@@ -314,7 +315,9 @@ guest.connect({
 | Name      | Type     | Description                          | Default |
 | --------- | -------- | ------------------------------------ | ------- |
 | `schema`  | `object` | schema of the api you want to expose | -       |
-| `options` | `object` | -                                    | -       |
+| `eventHandlers` | `object` | lifecycle callbacks like `onConnectionSetup` | - |
+
+`onConnectionSetup(remote)` is called once the handshake completes. It receives the remote API so you can perform setup logic before using the connection.
 
 ---
 
