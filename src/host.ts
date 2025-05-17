@@ -40,7 +40,7 @@ function isValidTarget(guest: Guest, event: any) {
  * Perform a handshake with the target iframe, when the handshake is confirmed
  * resolve the connection object containing RPCs and properties
  *
- * @param iframe
+ * @param guest
  * @param schema
  * @returns Promise
  */
