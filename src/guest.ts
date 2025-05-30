@@ -7,13 +7,13 @@ import {
   removeEventListener,
 } from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
-import { actions, EventHandlers, events, Connection, Schema } from "./types";
+import { actions, GuestConnectOptions, events, Connection, Schema } from "./types";
 
-function connect(schema: Schema = {}, eventHandlers?: EventHandlers): Promise<Connection> {
+function connect(schema: Schema = {}, options?: GuestConnectOptions): Promise<Connection> {
   return new Promise(async (resolve) => {
     const localMethods = extractMethods(schema);
-    const sendTo = getTargetHost();
-    const listenTo = self || window;
+    const sendTo = options?.hostTarget ?? getTargetHost();
+    const listenTo = options?.hostTarget ?? (self || window);
 
     // on handshake response
     async function handleHandshakeResponse(event: any) {
@@ -27,13 +27,13 @@ function connect(schema: Schema = {}, eventHandlers?: EventHandlers): Promise<Co
         eventData.connectionID,
         event,
         listenTo,
-        sendTo,
+        sendTo
       );
 
       // register local methods, passing the remote object
       const unregisterLocal = registerLocalMethods(localMethods, eventData.connectionID, listenTo, sendTo, remote);
 
-      await eventHandlers?.onConnectionSetup?.(remote);
+      await options?.onConnectionSetup?.(remote);
 
       // send a HANDSHAKE REPLY to the host
       const payload = {
