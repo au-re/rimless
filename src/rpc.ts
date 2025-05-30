@@ -205,9 +205,11 @@ export function registerRemoteMethods(
  *   stream: transfer(new ReadableStream()),
  * })));
  */
-export const withTransferable = <T, V extends object>(cb: (transfer: (transferable: T) => void) => V) => {
-  const transferables: T[] = [];
-  const transfer = (transferable: T) => {
+export const withTransferable = <Transferable, Result extends object>(
+  cb: (transfer: <T extends Transferable>(transferable: T) => T) => Result
+) => {
+  const transferables: Transferable[] = [];
+  const transfer = <T extends Transferable>(transferable: T) => {
     transferables.push(transferable);
     return transferable;
   };
