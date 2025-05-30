@@ -187,19 +187,17 @@ export function registerRemoteMethods(
  * @return result the callback's return value, with an extra array of transferable objects
  *                assigned to rimless' private symbol `SYM_TRANSFERABLES`
  *
- * The `transfer(...)` function can be called with one or more objects to transfer. When
- * called with one object, it returns that object. When called with zero or multiple objects,
- * it returns an array of the objects. Calling `transfer` will only modify the callback result,
- * not the original object itself (or objects themselves).
+ * The `transfer(...)` function is called with an object to transfer; if there
+ * are many objects to transfer, you may call it multiple times. It will always
+ * return the input object. Calling `transfer` only modifies the callback
+ * result, not the transferred object itself (or objects themselves).
  *
  * @example
  * host.connect({
  *   foo: (...args) => {
  *     const foo = new ArrayBuffer(8);
- *     const bar = new ArrayBuffer(8);
- *
- *     return withTransferable((transfer) => transfer(foo, bar));
- *   }),                                  // equal to [transfer(foo), transfer(bar)]
+ *     return withTransferable((transfer) => transfer(foo));
+ *   }),
  * });
  *
  * @example
@@ -209,9 +207,9 @@ export function registerRemoteMethods(
  */
 export const withTransferable = <T, V extends object>(cb: (transfer: (transferable: T) => void) => V) => {
   const transferables: T[] = [];
-  const transfer = (...toTransfer: [T, ...T[]]) => {
-    transferables.push(...toTransfer);
-    return toTransfer.length === 1 ? toTransfer[0] : toTransfer;
+  const transfer = (transferable: T) => {
+    transferables.push(transferable);
+    return transferable;
   };
 
   const result = cb(transfer);
