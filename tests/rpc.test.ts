@@ -49,6 +49,7 @@ describe("registerRemoteMethods", () => {
         connectionID: "conn",
       },
       event.origin,
+      []
     );
 
     // Resolve first RPC
@@ -78,6 +79,7 @@ describe("registerRemoteMethods", () => {
         connectionID: "conn",
       },
       event.origin,
+      []
     );
 
     const handlerBar = addEventListenerSpy.mock.calls[1][2];
@@ -93,4 +95,3 @@ describe("registerRemoteMethods", () => {
     await expect(promiseBar).resolves.toBe("resultBar");
   });
 });
-
