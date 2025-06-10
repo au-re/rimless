@@ -49,14 +49,16 @@ function connect(guest: Guest, schema: Schema = {}): Promise<Connection> {
 
   const guestIsWorker = isWorkerLike(guest);
 
-  const listenTo = guestIsWorker || isNodeEnv() ? (guest as Worker) : window;
+  const listenTo =
+    guestIsWorker || isNodeEnv() ? (guest as Worker) : guest instanceof SharedWorker ? guest.port : window;
 
   return new Promise((resolve) => {
     const connectionID = generateId();
 
     // on handshake request
     function handleHandshake(event: any) {
-      const sendTo = guestIsWorker || isNodeEnv() ? (guest as Worker) : event.source;
+      const sendTo =
+        guestIsWorker || isNodeEnv() ? (guest as Worker) : guest instanceof SharedWorker ? guest.port : event.source;
 
       if (!guestIsWorker && !isNodeEnv() && !isValidTarget(guest, event)) return;
 
@@ -74,7 +76,7 @@ function connect(guest: Guest, schema: Schema = {}): Promise<Connection> {
         connectionID,
         event,
         listenTo,
-        sendTo,
+        sendTo
       );
 
       // Now register local methods, passing the remote object
