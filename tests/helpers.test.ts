@@ -146,13 +146,16 @@ describe("environment detection", () => {
     });
 
     it("returns false when the global `process` is missing (browser-like)", () => {
-      global.process = undefined;
+      Reflect.deleteProperty(global as Record<string, unknown>, "process");
       expect(isNodeEnv()).toBe(false);
     });
 
     it("returns false when `process` exists but has no `versions.node`", () => {
       // Clone the real object so we don’t mutate the original
-      global.process = { ...realProcess, versions: {} } as unknown as NodeJS.Process;
+      (global as typeof global & { process?: NodeJS.Process | undefined }).process = {
+        ...realProcess,
+        versions: {},
+      } as NodeJS.Process;
       expect(isNodeEnv()).toBe(false);
     });
   });

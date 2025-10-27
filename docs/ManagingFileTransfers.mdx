@@ -1,0 +1,52 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import FileTransferExample from "./examples/Transferables/FileTransferExample";
+
+<Meta title="Managing File Transfers" />
+
+# Manage File Transfers with `withTransferable`
+
+Use `withTransferable` whenever you want to move large binary payloads (like files, `ArrayBuffer`s, or streams)
+between host and guest contexts without incurring the structured clone cost. The helper tags any transferables
+that should be moved instead of copied during `postMessage`.
+
+## Mark file payloads on the host
+
+```ts
+const buffer = await file.arrayBuffer();
+
+const response = await connection.remote.analyzeFile(
+  withTransferable((transfer) => ({
+    name: file.name,
+    buffer: transfer(buffer),
+  })),
+);
+```
+
+The `transfer` helper simply echoes the value you pass in while adding it to Rimless' internal list of transferables.
+It does not mutate the original object, so you can still inspect it before the call is sent.
+
+## Return transferables from the worker
+
+```ts
+const api = {
+  async analyzeFile({ name, buffer }: { name: string; buffer: ArrayBuffer }) {
+    // inspect the buffer before returning it
+    const size = buffer.byteLength;
+
+    return withTransferable((transfer) => ({
+      summary: `Processed ${name} (${size} bytes)`,
+      buffer: transfer(buffer),
+    }));
+  },
+};
+```
+
+Any transferables you include in the response are moved back to the caller, letting you hand off ownership of
+large blobs of data as soon as the worker is done with them.
+
+## Interactive example
+
+The demo below streams a file to a worker, inspects its contents, and transfers the processed data back to
+the main thread.
+
+<FileTransferExample />

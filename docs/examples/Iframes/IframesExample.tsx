@@ -28,19 +28,25 @@ function IframesExample() {
     let cancelled = false;
 
     (async () => {
-      conn1 = await host.connect(iframe.current!, { setColor });
-      if (cancelled) {
-        conn1.close();
-        return;
-      }
-      setConnection(conn1);
+      try {
+        const [nextConn1, nextConn2] = await Promise.all([
+          host.connect(iframe.current!, { setColor }),
+          host.connect(iframe2.current!, { setColor }),
+        ]);
 
-      conn2 = await host.connect(iframe2.current!, { setColor });
-      if (cancelled) {
-        conn2.close();
-        return;
+        if (cancelled) {
+          nextConn1.close();
+          nextConn2.close();
+          return;
+        }
+
+        conn1 = nextConn1;
+        conn2 = nextConn2;
+        setConnection(nextConn1);
+        setConnection2(nextConn2);
+      } catch (error) {
+        console.error("Error connecting to iframes", error);
       }
-      setConnection2(conn2);
     })();
 
     return () => {
