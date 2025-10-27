@@ -297,10 +297,10 @@ host.connect(iframe, {
 });
 ```
 
-| Name      | Type                            | Description                          | Required |
-| --------- | ------------------------------- | ------------------------------------ | -------- |
-| `guest`   | `HTMLIFrameElement` or `Worker` | Target of the connection             | required |
-| `schema`  | `object`                        | schema of the api you want to expose | -        |
+| Name     | Type                            | Description                          | Required |
+| -------- | ------------------------------- | ------------------------------------ | -------- |
+| `guest`  | `HTMLIFrameElement` or `Worker` | Target of the connection             | required |
+| `schema` | `object`                        | schema of the api you want to expose | -        |
 
 > ### `guest.connect`
 
@@ -312,12 +312,50 @@ guest.connect({
 });
 ```
 
-| Name      | Type     | Description                          | Default |
-| --------- | -------- | ------------------------------------ | ------- |
-| `schema`  | `object` | schema of the api you want to expose | -       |
-| `eventHandlers` | `object` | lifecycle callbacks like `onConnectionSetup` | - |
+| Name            | Type     | Description                                  | Default |
+| --------------- | -------- | -------------------------------------------- | ------- |
+| `schema`        | `object` | schema of the api you want to expose         | -       |
+| `eventHandlers` | `object` | lifecycle callbacks like `onConnectionSetup` | -       |
 
 `onConnectionSetup(remote)` is called once the handshake completes. It receives the remote API so you can perform setup logic before using the connection.
+
+> ### `withTransferable`
+
+Wrap RPC payloads that contain [transferable objects](https://developer.mozilla.org/en-US/docs/Glossary/Transferable_objects) so ownership moves between contexts instead of cloning the data. Useful for `ArrayBuffer`, `MessagePort`, `ReadableStream`, and similar types.
+
+```js
+import { withTransferable } from "rimless";
+
+const buffer = await file.arrayBuffer();
+
+await connection.remote.processFile(
+  withTransferable((transfer) => ({
+    name: file.name,
+    buffer: transfer(buffer), // moves the ArrayBuffer to the worker
+  })),
+);
+```
+
+`withTransferable` invokes your callback with a `transfer` helper. Call it for every object you want to mark as transferable; the helper returns the same value so you can build payloads inline. The metadata is attached to the wrapper object without mutating your data.
+
+Workers can also return transferables back to the caller:
+
+```js
+import { guest, withTransferable } from "rimless";
+
+const api = {
+  async processFile({ name, buffer }) {
+    const size = buffer.byteLength;
+
+    return withTransferable((transfer) => ({
+      summary: `Processed ${name} (${size} bytes)`,
+      buffer: transfer(buffer), // hands ownership back to the host
+    }));
+  },
+};
+
+await guest.connect(api);
+```
 
 ---
 

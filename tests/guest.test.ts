@@ -1,23 +1,23 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import type { MockInstance } from "vitest";
 import { guest } from "../src/index";
 import * as helpers from "../src/helpers";
 import * as rpc from "../src/rpc";
 import { actions, events } from "../src/types";
 
 describe("guest.connect", () => {
-  let addEventListenerSpy: ReturnType<typeof vi.spyOn>;
-  let removeEventListenerSpy: ReturnType<typeof vi.spyOn>;
-  let postMessageSpy: ReturnType<typeof vi.spyOn>;
-  let getTargetHostSpy: ReturnType<typeof vi.spyOn>;
-  let getEventDataSpy: ReturnType<typeof vi.spyOn>;
-  let registerRemoteMethodsSpy: ReturnType<typeof vi.spyOn>;
-  let registerLocalMethodsSpy: ReturnType<typeof vi.spyOn>;
+  let addEventListenerSpy: MockInstance<typeof helpers.addEventListener>;
+  let removeEventListenerSpy: MockInstance<typeof helpers.removeEventListener>;
+  let postMessageSpy: MockInstance<typeof helpers.postMessageToTarget>;
+  let getEventDataSpy: MockInstance<typeof helpers.getEventData>;
+  let registerRemoteMethodsSpy: MockInstance<typeof rpc.registerRemoteMethods>;
+  let registerLocalMethodsSpy: MockInstance<typeof rpc.registerLocalMethods>;
 
   let unregisterRemoteMock: ReturnType<typeof vi.fn>;
   let unregisterLocalMock: ReturnType<typeof vi.fn>;
   let remoteAPI: Record<string, any>;
   let mockTarget: Record<string, unknown>;
-  let messageHandler: ((event: any) => Promise<void> | void) | undefined;
+  let messageHandler: ((event: unknown) => Promise<void> | void) | undefined;
   let originalSelf: typeof globalThis.self | undefined;
 
   beforeEach(() => {
@@ -27,15 +27,19 @@ describe("guest.connect", () => {
     unregisterRemoteMock = vi.fn();
     unregisterLocalMock = vi.fn();
 
-    addEventListenerSpy = vi
-      .spyOn(helpers, "addEventListener")
-      .mockImplementation((_target, _eventName, handler) => {
-        messageHandler = handler;
-      });
+    addEventListenerSpy = vi.spyOn(helpers, "addEventListener").mockImplementation((_target, _eventName, handler) => {
+      if (typeof handler === "function") {
+        messageHandler = handler as (event: unknown) => Promise<void> | void;
+      } else if (handler && typeof handler.handleEvent === "function") {
+        messageHandler = (event) => handler.handleEvent(event as Event);
+      } else {
+        messageHandler = undefined;
+      }
+    });
 
     removeEventListenerSpy = vi.spyOn(helpers, "removeEventListener").mockImplementation(() => {});
     postMessageSpy = vi.spyOn(helpers, "postMessageToTarget").mockImplementation(() => {});
-    getTargetHostSpy = vi.spyOn(helpers, "getTargetHost").mockReturnValue(mockTarget);
+    vi.spyOn(helpers, "getTargetHost").mockReturnValue(mockTarget);
     getEventDataSpy = vi.spyOn(helpers, "getEventData");
 
     registerRemoteMethodsSpy = vi.spyOn(rpc, "registerRemoteMethods").mockImplementation(
@@ -52,8 +56,7 @@ describe("guest.connect", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     if (originalSelf === undefined) {
-      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-      delete (globalThis as typeof globalThis & { self?: typeof globalThis.self }).self;
+      Reflect.deleteProperty(globalThis as Record<string, unknown>, "self");
     } else {
       globalThis.self = originalSelf;
     }
@@ -106,8 +109,10 @@ describe("guest.connect", () => {
     );
 
     expect(registerLocalMethodsSpy).toHaveBeenCalledTimes(1);
-    const [localMethods, connectionID, localListenTarget, sendTarget, remoteArg] = registerLocalMethodsSpy.mock.calls[0];
-    expect(Object.keys(localMethods).sort()).toEqual(["math.multiply", "ping"]);
+    const [localMethods, connectionID, localListenTarget, sendTarget, remoteArg] =
+      registerLocalMethodsSpy.mock.calls[0] as Parameters<typeof rpc.registerLocalMethods>;
+    const methodKeys = Object.keys(localMethods ?? {}).sort();
+    expect(methodKeys).toEqual(["math.multiply", "ping"]);
     expect(connectionID).toBe(handshakeData.connectionID);
     expect(localListenTarget).toBe(listenTarget);
     expect(sendTarget).toBe(mockTarget);

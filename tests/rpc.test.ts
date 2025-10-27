@@ -5,13 +5,12 @@ import * as helpers from "../src/helpers";
 
 // Helper variables for mocks
 let addEventListenerSpy: any;
-let removeEventListenerSpy: any;
 let postMessageSpy: any;
 let generateIdSpy: any;
 
 beforeEach(() => {
   addEventListenerSpy = vi.spyOn(helpers, "addEventListener").mockImplementation(() => {});
-  removeEventListenerSpy = vi.spyOn(helpers, "removeEventListener").mockImplementation(() => {});
+  vi.spyOn(helpers, "removeEventListener").mockImplementation(() => {});
   postMessageSpy = vi.spyOn(helpers, "postMessageToTarget").mockImplementation(() => {});
   generateIdSpy = vi.spyOn(helpers, "generateId").mockReturnValue("id-1");
 });

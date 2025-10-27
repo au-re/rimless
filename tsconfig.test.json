@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["vitest/globals", "node"],
+    "typeRoots": ["./lib/index.d.ts", "./node_modules/@types", "./node_modules"],
+    "noEmit": true
+  },
+  "include": ["tests"]
+}

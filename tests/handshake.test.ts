@@ -16,7 +16,6 @@ let addEventListenerSpy: any;
 let removeEventListenerSpy: any;
 let postMessageSpy: any;
 let generateIdSpy: any;
-let getTargetHostSpy: any;
 let originalSelf: any;
 
 beforeEach(() => {
@@ -45,7 +44,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.restoreAllMocks();
   if (originalSelf === undefined) {
-    delete global.self;
+    Reflect.deleteProperty(global as Record<string, unknown>, "self");
   } else {
     global.self = originalSelf;
   }
@@ -62,7 +61,7 @@ function setupPorts() {
 describe("handshake with rpc", () => {
   it("allows calling exposed methods after handshake", async () => {
     const { port1, port2 } = setupPorts();
-    getTargetHostSpy = vi.spyOn(helpers, "getTargetHost").mockReturnValue(port1);
+    vi.spyOn(helpers, "getTargetHost").mockReturnValue(port1);
     // @ts-expect-error - mock worker self
     global.self = port1;
 
@@ -83,7 +82,7 @@ describe("handshake with rpc", () => {
 
   it("supports using the remote parameter inside RPC handlers", async () => {
     const { port1, port2 } = setupPorts();
-    getTargetHostSpy = vi.spyOn(helpers, "getTargetHost").mockReturnValue(port1);
+    vi.spyOn(helpers, "getTargetHost").mockReturnValue(port1);
     // @ts-expect-error - mock worker self
     global.self = port1;
 
@@ -202,7 +201,7 @@ describe("handshake edge cases", () => {
 
   it("cleans up listeners when host connection is closed", async () => {
     const { port1, port2 } = setupPorts();
-    getTargetHostSpy = vi.spyOn(helpers, "getTargetHost").mockReturnValue(port1);
+    vi.spyOn(helpers, "getTargetHost").mockReturnValue(port1);
     // @ts-expect-error - mock worker self
     global.self = port1;
 
@@ -231,7 +230,7 @@ describe("guest handshake edge cases", () => {
     listenPort.partner = targetPort;
     targetPort.partner = listenPort;
 
-    getTargetHostSpy = vi.spyOn(helpers, "getTargetHost").mockReturnValue(targetPort);
+    vi.spyOn(helpers, "getTargetHost").mockReturnValue(targetPort);
     // @ts-expect-error - mock worker self
     global.self = listenPort;
 
