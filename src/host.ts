@@ -25,9 +25,15 @@ function isValidTarget(guest: Guest, event: any) {
   const iframe = guest as HTMLIFrameElement;
   try {
     const childURL = iframe.src;
+    const hasInlineContent = typeof iframe.srcdoc === "string" && iframe.srcdoc.length > 0;
     const childOrigin = getOriginFromURL(childURL);
     const hasProperOrigin = event.origin === childOrigin;
     const hasProperSource = event.source === iframe.contentWindow;
+
+    // For inline iframes (srcdoc/about:blank) we can only rely on source matching
+    if (hasInlineContent || childURL === "about:blank") {
+      return hasProperSource;
+    }
 
     return (hasProperOrigin && hasProperSource) || !childURL;
   } catch (e) {
