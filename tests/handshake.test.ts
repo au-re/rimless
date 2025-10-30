@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import type { MockInstance } from "vitest";
 import { host, guest } from "../src/index";
 import * as helpers from "../src/helpers";
 import * as rpc from "../src/rpc";
@@ -18,15 +19,13 @@ class MockWorker extends EventEmitter {
   terminate = vi.fn();
 }
 
-let addEventListenerSpy: any;
-let removeEventListenerSpy: any;
-let postMessageSpy: any;
-let generateIdSpy: any;
+let addEventListenerSpy: MockInstance<typeof helpers.addEventListener>;
+let removeEventListenerSpy: MockInstance<typeof helpers.removeEventListener>;
+let postMessageSpy: MockInstance<typeof helpers.postMessageToTarget>;
+let generateIdSpy: MockInstance<typeof helpers.generateId>;
 let originalSelf: any;
 
-type HelpersSpy<K extends keyof typeof helpers> = ReturnType<typeof vi.spyOn<typeof helpers, K>>;
-
-let serverEnvSpy: HelpersSpy<"isServerEnv">;
+let serverEnvSpy: MockInstance<typeof helpers.isServerEnv>;
 
 beforeEach(() => {
   originalSelf = global.self;
@@ -435,7 +434,7 @@ describe("guest handshake edge cases", () => {
       return connection;
     });
 
-    const handshakeHandler = addEventListenerSpy.mock.calls[0][2];
+    const handshakeHandler = addEventListenerSpy.mock.calls[0][2] as (event: any) => void;
 
     handshakeHandler({
       data: {
