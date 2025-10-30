@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { extractMethods, isWorker, isNodeEnv, getOriginFromURL, set } from "../src/helpers";
+import { extractMethods, isBrowserEnv, isWorker, isNodeEnv, isBunEnv, isServerEnv, getOriginFromURL, set } from "../src/helpers";
 
 describe("extract functions", () => {
   const noFunctions = {
@@ -102,10 +102,16 @@ describe("environment detection", () => {
   describe("isWorker", () => {
     const originalWindow = global.window;
     const originalSelf = global.self;
+    const originalImportScripts = (global as any).importScripts;
 
     afterEach(() => {
       global.window = originalWindow;
       global.self = originalSelf;
+      if (typeof originalImportScripts === "function") {
+        (global as any).importScripts = originalImportScripts;
+      } else {
+        Reflect.deleteProperty(global as Record<string, unknown>, "importScripts");
+      }
     });
 
     it("returns true in worker environment", () => {
@@ -113,6 +119,7 @@ describe("environment detection", () => {
       global.window = undefined;
       // @ts-expect-error - mocking worker env
       global.self = {};
+      (global as any).importScripts = () => {};
       expect(isWorker()).toBe(true);
     });
 
@@ -133,16 +140,64 @@ describe("environment detection", () => {
     });
   });
 
+  describe("isBrowserEnv", () => {
+    const originalWindow = global.window;
+    const originalDocument = (global as any).document;
+
+    afterEach(() => {
+      global.window = originalWindow;
+      if (typeof originalDocument !== "undefined") {
+        (global as any).document = originalDocument;
+      } else {
+        Reflect.deleteProperty(global as Record<string, unknown>, "document");
+      }
+    });
+
+    it("returns true when window and document are present", () => {
+      // @ts-expect-error - mocking browser env
+      global.window = { document: {} };
+      (global as any).document = {};
+      expect(isBrowserEnv()).toBe(true);
+    });
+
+    it("returns false when window is missing", () => {
+      // @ts-expect-error - mocking server env
+      global.window = undefined;
+      Reflect.deleteProperty(global as Record<string, unknown>, "document");
+      expect(isBrowserEnv()).toBe(false);
+    });
+  });
+
   describe("isNodeEnv", () => {
     const realProcess = global.process;
+    const realBun = (global as any).Bun;
 
     afterEach(() => {
       // Put the genuine `process` back after every test
       global.process = realProcess;
+      if (typeof realBun !== "undefined") {
+        (global as any).Bun = realBun;
+      } else {
+        Reflect.deleteProperty(global as Record<string, unknown>, "Bun");
+      }
     });
 
     it("returns true in a real Node.js environment", () => {
-      expect(isNodeEnv()).toBe(true);
+      const originalWindow = global.window;
+      const originalDocument = (global as any).document;
+      try {
+        // @ts-expect-error - simulate Node.js where window/document are absent
+        global.window = undefined;
+        Reflect.deleteProperty(global as Record<string, unknown>, "document");
+        expect(isNodeEnv()).toBe(true);
+      } finally {
+        global.window = originalWindow;
+        if (typeof originalDocument !== "undefined") {
+          (global as any).document = originalDocument;
+        } else {
+          Reflect.deleteProperty(global as Record<string, unknown>, "document");
+        }
+      }
     });
 
     it("returns false when the global `process` is missing (browser-like)", () => {
@@ -156,6 +211,60 @@ describe("environment detection", () => {
         ...realProcess,
         versions: {},
       } as NodeJS.Process;
+      expect(isNodeEnv()).toBe(false);
+    });
+
+    it("returns false when a shim provides node version without proper release metadata", () => {
+      (global as any).process = {
+        ...realProcess,
+        versions: { node: "18.0.0" },
+        release: { name: "shim" },
+      };
+      expect(isNodeEnv()).toBe(false);
+    });
+  });
+
+  describe("isBunEnv", () => {
+    const realProcess = global.process;
+    const realBun = (global as any).Bun;
+    const originalWindow = global.window;
+    const originalDocument = (global as any).document;
+
+    afterEach(() => {
+      global.process = realProcess;
+      if (typeof realBun !== "undefined") {
+        (global as any).Bun = realBun;
+      } else {
+        Reflect.deleteProperty(global as Record<string, unknown>, "Bun");
+      }
+      global.window = originalWindow;
+      if (typeof originalDocument !== "undefined") {
+        (global as any).document = originalDocument;
+      } else {
+        Reflect.deleteProperty(global as Record<string, unknown>, "document");
+      }
+    });
+
+    it("detects Bun via global Bun object", () => {
+      // @ts-expect-error - simulate server-like Bun env
+      global.window = undefined;
+      Reflect.deleteProperty(global as Record<string, unknown>, "document");
+      (global as any).Bun = {};
+      Reflect.deleteProperty(global as Record<string, unknown>, "process");
+      expect(isBunEnv()).toBe(true);
+      expect(isServerEnv()).toBe(true);
+    });
+
+    it("detects Bun via process versions", () => {
+      // @ts-expect-error - simulate server-like Bun env
+      global.window = undefined;
+      Reflect.deleteProperty(global as Record<string, unknown>, "document");
+      (global as any).process = {
+        ...realProcess,
+        versions: { bun: "1.0.0" },
+      };
+      expect(isBunEnv()).toBe(true);
+      expect(isServerEnv()).toBe(true);
       expect(isNodeEnv()).toBe(false);
     });
   });

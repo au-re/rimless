@@ -30,7 +30,7 @@ export function registerLocalMethods(
   rpcConnectionID: string,
   listenTo: Environment,
   sendTo: Target,
-  remote: Schema // Add remote parameter
+  remote: Schema, // Add remote parameter
 ) {
   const listeners: any[] = [];
   for (const [methodName, method] of Object.entries(methods)) {
@@ -100,7 +100,7 @@ export function createRPC(
   event: RimlessEvent,
   listeners: Array<() => void> = [],
   listenTo: Environment,
-  sendTo: Target
+  sendTo: Target,
 ) {
   return (...args: any[]) => {
     return new Promise((resolve, reject) => {
@@ -135,7 +135,7 @@ export function createRPC(
         (transferables, arg) =>
           arg[SYM_TRANSFERABLES]?.length ? transferables.concat(arg[SYM_TRANSFERABLES]) : transferables,
         // @ts-expect-error: we know this is an array of transferables (if it exists)
-        args[SYM_TRANSFERABLES] ?? []
+        args[SYM_TRANSFERABLES] ?? [],
       );
 
       addEventListener(listenTo, events.MESSAGE, handleResponse);
@@ -162,7 +162,7 @@ export function registerRemoteMethods(
   connectionID: string,
   event: RimlessEvent,
   listenTo: Environment,
-  sendTo: Target
+  sendTo: Target,
 ) {
   const remote = { ...schema };
   const listeners: Array<() => void> = [];
@@ -206,7 +206,7 @@ export function registerRemoteMethods(
  * })));
  */
 export const withTransferable = <Transferable, Result extends object>(
-  cb: (transfer: <T extends Transferable>(transferable: T) => T) => Result
+  cb: (transfer: <T extends Transferable>(transferable: T) => T) => Result,
 ) => {
   const transferables: Transferable[] = [];
   const transfer = <T extends Transferable>(transferable: T) => {

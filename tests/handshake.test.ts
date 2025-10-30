@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import type { MockInstance } from "vitest";
 import { host, guest } from "../src/index";
 import * as helpers from "../src/helpers";
+import * as rpc from "../src/rpc";
 import { actions, events } from "../src/types";
 import { EventEmitter } from "events";
 
@@ -12,11 +14,18 @@ class MockPort extends EventEmitter {
   terminate() {}
 }
 
-let addEventListenerSpy: any;
-let removeEventListenerSpy: any;
-let postMessageSpy: any;
-let generateIdSpy: any;
+class MockWorker extends EventEmitter {
+  postMessage = vi.fn();
+  terminate = vi.fn();
+}
+
+let addEventListenerSpy: MockInstance<typeof helpers.addEventListener>;
+let removeEventListenerSpy: MockInstance<typeof helpers.removeEventListener>;
+let postMessageSpy: MockInstance<typeof helpers.postMessageToTarget>;
+let generateIdSpy: MockInstance<typeof helpers.generateId>;
 let originalSelf: any;
+
+let serverEnvSpy: MockInstance<typeof helpers.isServerEnv>;
 
 beforeEach(() => {
   originalSelf = global.self;
@@ -30,15 +39,12 @@ beforeEach(() => {
     .mockImplementation((target: any, _event: string, handler: any) => {
       target.off("message", handler);
     });
-  postMessageSpy = vi
-    .spyOn(helpers, "postMessageToTarget")
-    .mockImplementation((target: any, message: any) => {
-      target.postMessage(message);
-    });
+  postMessageSpy = vi.spyOn(helpers, "postMessageToTarget").mockImplementation((target: any, message: any) => {
+    target.postMessage(message);
+  });
   let counter = 1;
-  generateIdSpy = vi
-    .spyOn(helpers, "generateId")
-    .mockImplementation(() => `id-${counter++}`);
+  generateIdSpy = vi.spyOn(helpers, "generateId").mockImplementation(() => `id-${counter++}`);
+  serverEnvSpy = vi.spyOn(helpers, "isServerEnv").mockReturnValue(true);
 });
 
 afterEach(() => {
@@ -169,12 +175,12 @@ describe("handshake edge cases", () => {
       }
     });
 
-    const isNodeEnvSpy = vi.spyOn(helpers, "isNodeEnv").mockReturnValue(false);
     const isWorkerLikeSpy = vi.spyOn(helpers, "isWorkerLike").mockReturnValue(false);
     const isNodeWorkerSpy = vi.spyOn(helpers, "isNodeWorker").mockReturnValue(false);
 
     postMessageSpy.mockClear();
 
+    serverEnvSpy.mockReturnValue(false);
     host.connect(iframe as HTMLIFrameElement, {});
 
     const handlers = windowListeners.get(events.MESSAGE);
@@ -194,9 +200,180 @@ describe("handshake edge cases", () => {
 
     expect(postMessageSpy).not.toHaveBeenCalled();
 
-    isNodeEnvSpy.mockRestore();
     isWorkerLikeSpy.mockRestore();
     isNodeWorkerSpy.mockRestore();
+  });
+
+  it("terminates worker guests when the host connection closes", async () => {
+    const worker = new MockWorker();
+    const isWorkerLikeSpy = vi.spyOn(helpers, "isWorkerLike").mockReturnValue(true);
+    serverEnvSpy.mockReturnValue(false);
+
+    const hostPromise = host.connect(worker as unknown as Worker, {});
+
+    worker.emit("message", {
+      data: {
+        action: actions.HANDSHAKE_REQUEST,
+        schema: {},
+        methodNames: [],
+      },
+      origin: "worker://example",
+    });
+
+    expect(postMessageSpy).toHaveBeenCalledWith(
+      worker,
+      expect.objectContaining({
+        action: actions.HANDSHAKE_REPLY,
+        connectionID: "id-1",
+      }),
+      "worker://example",
+    );
+
+    worker.emit("message", {
+      data: {
+        action: actions.HANDSHAKE_REPLY,
+        connectionID: "id-1",
+      },
+      origin: "worker://example",
+    });
+
+    const connection = await hostPromise;
+    removeEventListenerSpy.mockClear();
+
+    connection.close();
+
+    expect(removeEventListenerSpy).toHaveBeenCalledWith(worker, events.MESSAGE, expect.any(Function));
+    expect(worker.terminate).toHaveBeenCalledTimes(1);
+
+    isWorkerLikeSpy.mockRestore();
+  });
+
+  it("allows inline iframe handshakes when the source matches", async () => {
+    const fakeContentWindow = {
+      postMessage: vi.fn(),
+    } as unknown as Window & { postMessage: ReturnType<typeof vi.fn> };
+
+    const iframe: Partial<HTMLIFrameElement> & {
+      contentWindow: Window & { postMessage: ReturnType<typeof vi.fn> };
+    } = {
+      src: "about:blank",
+      srcdoc: "<html></html>",
+      contentWindow: fakeContentWindow,
+    };
+
+    const windowListeners = new Map<string, Array<(event: any) => void>>();
+
+    addEventListenerSpy.mockImplementation((target: any, event: string, handler: any) => {
+      if (target === window) {
+        const handlers = windowListeners.get(event) ?? [];
+        handlers.push(handler);
+        windowListeners.set(event, handlers);
+      } else if (typeof target.on === "function") {
+        target.on(event, handler);
+      }
+    });
+
+    removeEventListenerSpy.mockImplementation((target: any, event: string, handler: any) => {
+      if (target === window) {
+        const handlers = windowListeners.get(event) ?? [];
+        windowListeners.set(
+          event,
+          handlers.filter((cb) => cb !== handler),
+        );
+      } else if (typeof target.off === "function") {
+        target.off(event, handler);
+      }
+    });
+
+    serverEnvSpy.mockReturnValue(false);
+
+    const hostPromise = host.connect(iframe as HTMLIFrameElement, {
+      greet: () => "hello",
+    });
+
+    const handlers = windowListeners.get(events.MESSAGE);
+    expect(handlers).toBeDefined();
+
+    const handshakeEvent = {
+      data: {
+        action: actions.HANDSHAKE_REQUEST,
+        schema: { guest: { notify: vi.fn() } },
+        methodNames: ["guest.notify"],
+      },
+      origin: "https://child.example.com",
+      source: fakeContentWindow,
+    };
+
+    handlers?.forEach((handler) => handler(handshakeEvent));
+
+    expect(postMessageSpy).toHaveBeenCalledWith(
+      fakeContentWindow,
+      expect.objectContaining({
+        action: actions.HANDSHAKE_REPLY,
+        connectionID: "id-1",
+        methodNames: ["greet"],
+      }),
+      handshakeEvent.origin,
+    );
+
+    const handshakeReplyEvent = {
+      data: {
+        action: actions.HANDSHAKE_REPLY,
+        connectionID: "id-1",
+      },
+      origin: handshakeEvent.origin,
+      source: fakeContentWindow,
+    };
+
+    handlers?.forEach((handler) => handler(handshakeReplyEvent));
+    const connection = await hostPromise;
+    expect(connection.id).toBe("id-1");
+
+    connection.close();
+  });
+
+  it("ignores duplicate handshake requests for the same connection", async () => {
+    const { port2 } = setupPorts();
+    const registerRemoteMethodsSpy = vi.spyOn(rpc, "registerRemoteMethods");
+    const registerLocalMethodsSpy = vi.spyOn(rpc, "registerLocalMethods");
+
+    const hostPromise = host.connect(port2, {});
+
+    const handshakeEvent = {
+      data: {
+        action: actions.HANDSHAKE_REQUEST,
+        schema: {},
+        methodNames: [],
+      },
+      origin: "https://guest.example.com",
+    };
+
+    port2.emit("message", handshakeEvent);
+
+    expect(registerRemoteMethodsSpy).toHaveBeenCalledTimes(1);
+    expect(registerLocalMethodsSpy).toHaveBeenCalledTimes(1);
+    expect(postMessageSpy).toHaveBeenCalledTimes(1);
+
+    registerRemoteMethodsSpy.mockClear();
+    registerLocalMethodsSpy.mockClear();
+    postMessageSpy.mockClear();
+
+    port2.emit("message", handshakeEvent);
+
+    expect(registerRemoteMethodsSpy).not.toHaveBeenCalled();
+    expect(registerLocalMethodsSpy).not.toHaveBeenCalled();
+    expect(postMessageSpy).not.toHaveBeenCalled();
+
+    port2.emit("message", {
+      data: {
+        action: actions.HANDSHAKE_REPLY,
+        connectionID: "id-1",
+      },
+      origin: handshakeEvent.origin,
+    });
+
+    const connection = await hostPromise;
+    connection.close();
   });
 
   it("cleans up listeners when host connection is closed", async () => {
@@ -252,14 +429,12 @@ describe("guest handshake edge cases", () => {
         }),
     );
 
-    const connectionPromise = guest
-      .connect({}, { onConnectionSetup })
-      .then((connection) => {
-        connectionResolved = true;
-        return connection;
-      });
+    const connectionPromise = guest.connect({}, { onConnectionSetup }).then((connection) => {
+      connectionResolved = true;
+      return connection;
+    });
 
-    const handshakeHandler = addEventListenerSpy.mock.calls[0][2];
+    const handshakeHandler = addEventListenerSpy.mock.calls[0][2] as (event: any) => void;
 
     handshakeHandler({
       data: {

@@ -1,12 +1,65 @@
 import { Guest, NodeWorker, Target, WorkerLike } from "./types";
 
+type RuntimeEnvironment = "browser" | "worker" | "node" | "bun";
+
+function detectRuntime(): RuntimeEnvironment {
+  const globalObject = globalThis as Record<string, any>;
+
+  // Prefer explicit browser detection before checking shims
+  if (typeof globalObject.window !== "undefined" && typeof globalObject.document !== "undefined") {
+    return "browser";
+  }
+
+  const hasWorkerGlobalScope =
+    typeof globalObject.WorkerGlobalScope !== "undefined" &&
+    typeof globalObject.self !== "undefined" &&
+    globalObject.self instanceof globalObject.WorkerGlobalScope;
+
+  if (
+    hasWorkerGlobalScope ||
+    (typeof globalObject.window === "undefined" &&
+      typeof globalObject.self !== "undefined" &&
+      typeof globalObject.importScripts === "function")
+  ) {
+    return "worker";
+  }
+
+  const processRef = globalObject.process;
+  if (processRef && typeof processRef === "object") {
+    const versions = processRef.versions ?? {};
+    const releaseName = processRef.release?.name;
+
+    if (versions.bun || releaseName === "bun" || typeof globalObject.Bun !== "undefined") {
+      return "bun";
+    }
+
+    if (versions.node && releaseName === "node") {
+      return "node";
+    }
+  }
+
+  if (typeof globalObject.Bun !== "undefined") {
+    return "bun";
+  }
+
+  return "browser";
+}
+
+export function getRuntimeEnvironment(): RuntimeEnvironment {
+  return detectRuntime();
+}
+
+export function isBrowserEnv(): boolean {
+  return getRuntimeEnvironment() === "browser";
+}
+
 /**
  * check if run in a webworker
  *
  * @returns boolean
  */
 export function isWorker(): boolean {
-  return typeof window === "undefined" && typeof self !== "undefined";
+  return getRuntimeEnvironment() === "worker";
 }
 
 /**
@@ -15,7 +68,16 @@ export function isWorker(): boolean {
  * @returns boolean
  */
 export function isNodeEnv(): boolean {
-  return typeof process !== "undefined" && !!(process as any).versions?.node;
+  return getRuntimeEnvironment() === "node";
+}
+
+export function isBunEnv(): boolean {
+  return getRuntimeEnvironment() === "bun";
+}
+
+export function isServerEnv(): boolean {
+  const runtime = getRuntimeEnvironment();
+  return runtime === "node" || runtime === "bun";
 }
 
 /**
@@ -122,9 +184,10 @@ export function generateId(length: number = 10): string {
   return result;
 }
 
+const initialRuntime = getRuntimeEnvironment();
 let parentPort: any = null;
 
-if (isNodeEnv()) {
+if (initialRuntime === "node" || initialRuntime === "bun") {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const workerThreads = require("worker_threads");
@@ -139,7 +202,7 @@ if (isNodeEnv()) {
  * @returns The messaging target for the current environment
  */
 export function getTargetHost(): any {
-  if (isNodeEnv()) {
+  if (isServerEnv()) {
     return parentPort;
   }
 
@@ -172,7 +235,7 @@ export function postMessageToTarget(
   }
 
   // Node.js Worker
-  if (isNodeEnv() && target === parentPort) {
+  if (isServerEnv() && target === parentPort) {
     target.postMessage(message, { transfer: transferables });
     return;
   }
