@@ -4,7 +4,7 @@ import {
   generateId,
   getEventData,
   getOriginFromURL,
-  isNodeEnv,
+  isServerEnv,
   isNodeWorker,
   isWorkerLike,
   postMessageToTarget,
@@ -55,16 +55,16 @@ function connect(guest: Guest, schema: Schema = {}): Promise<Connection> {
 
   const guestIsWorker = isWorkerLike(guest);
 
-  const listenTo = guestIsWorker || isNodeEnv() ? (guest as Worker) : window;
+  const listenTo = guestIsWorker || isServerEnv() ? (guest as Worker) : window;
 
   return new Promise((resolve) => {
     const connectionID = generateId();
 
     // on handshake request
     function handleHandshake(event: any) {
-      const sendTo = guestIsWorker || isNodeEnv() ? (guest as Worker) : event.source;
+      const sendTo = guestIsWorker || isServerEnv() ? (guest as Worker) : event.source;
 
-      if (!guestIsWorker && !isNodeEnv() && !isValidTarget(guest, event)) return;
+      if (!guestIsWorker && !isServerEnv() && !isValidTarget(guest, event)) return;
 
       const eventData = getEventData(event);
       if (eventData?.action !== actions.HANDSHAKE_REQUEST) return;

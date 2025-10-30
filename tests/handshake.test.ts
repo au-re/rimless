@@ -18,6 +18,10 @@ let postMessageSpy: any;
 let generateIdSpy: any;
 let originalSelf: any;
 
+type HelpersSpy<K extends keyof typeof helpers> = ReturnType<typeof vi.spyOn<typeof helpers, K>>;
+
+let serverEnvSpy: HelpersSpy<"isServerEnv">;
+
 beforeEach(() => {
   originalSelf = global.self;
   addEventListenerSpy = vi
@@ -30,15 +34,12 @@ beforeEach(() => {
     .mockImplementation((target: any, _event: string, handler: any) => {
       target.off("message", handler);
     });
-  postMessageSpy = vi
-    .spyOn(helpers, "postMessageToTarget")
-    .mockImplementation((target: any, message: any) => {
-      target.postMessage(message);
-    });
+  postMessageSpy = vi.spyOn(helpers, "postMessageToTarget").mockImplementation((target: any, message: any) => {
+    target.postMessage(message);
+  });
   let counter = 1;
-  generateIdSpy = vi
-    .spyOn(helpers, "generateId")
-    .mockImplementation(() => `id-${counter++}`);
+  generateIdSpy = vi.spyOn(helpers, "generateId").mockImplementation(() => `id-${counter++}`);
+  serverEnvSpy = vi.spyOn(helpers, "isServerEnv").mockReturnValue(true);
 });
 
 afterEach(() => {
@@ -169,12 +170,12 @@ describe("handshake edge cases", () => {
       }
     });
 
-    const isNodeEnvSpy = vi.spyOn(helpers, "isNodeEnv").mockReturnValue(false);
     const isWorkerLikeSpy = vi.spyOn(helpers, "isWorkerLike").mockReturnValue(false);
     const isNodeWorkerSpy = vi.spyOn(helpers, "isNodeWorker").mockReturnValue(false);
 
     postMessageSpy.mockClear();
 
+    serverEnvSpy.mockReturnValue(false);
     host.connect(iframe as HTMLIFrameElement, {});
 
     const handlers = windowListeners.get(events.MESSAGE);
@@ -194,7 +195,6 @@ describe("handshake edge cases", () => {
 
     expect(postMessageSpy).not.toHaveBeenCalled();
 
-    isNodeEnvSpy.mockRestore();
     isWorkerLikeSpy.mockRestore();
     isNodeWorkerSpy.mockRestore();
   });
@@ -252,12 +252,10 @@ describe("guest handshake edge cases", () => {
         }),
     );
 
-    const connectionPromise = guest
-      .connect({}, { onConnectionSetup })
-      .then((connection) => {
-        connectionResolved = true;
-        return connection;
-      });
+    const connectionPromise = guest.connect({}, { onConnectionSetup }).then((connection) => {
+      connectionResolved = true;
+      return connection;
+    });
 
     const handshakeHandler = addEventListenerSpy.mock.calls[0][2];
 
