@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { host } from "../../../src/index";
 import type { Connection } from "../../../src/types";
 import template from "./iframe.html?raw";
+import iframeGuestUrl from "./iframeGuest?worker&url";
 
 function makeRandomColor() {
   const letters = "0123456789ABCDEF";
@@ -13,6 +14,7 @@ function makeRandomColor() {
 }
 
 function IframesExample() {
+  const srcDoc = React.useMemo(() => template.replace("__IFRAME_GUEST_SCRIPT_URL__", iframeGuestUrl), []);
   const iframe = React.useRef<HTMLIFrameElement | null>(null);
   const iframe2 = React.useRef<HTMLIFrameElement | null>(null);
   const [color, setColor] = React.useState("#fff");
@@ -62,6 +64,7 @@ function IframesExample() {
         {connection && connection2 ? <div>Connected</div> : <div>Connecting...</div>}
         <button
           type="button"
+          disabled={!connection || !connection2}
           onClick={() => {
             connection?.remote.setColor(makeRandomColor());
             connection2?.remote.setColor(makeRandomColor());
@@ -79,7 +82,7 @@ function IframesExample() {
           }}
           title="guest1"
           ref={iframe}
-          srcDoc={template}
+          srcDoc={srcDoc}
           sandbox="allow-same-origin allow-scripts"
         />
         <iframe
@@ -90,7 +93,7 @@ function IframesExample() {
           }}
           title="guest2"
           ref={iframe2}
-          srcDoc={template}
+          srcDoc={srcDoc}
           sandbox="allow-same-origin allow-scripts"
         />
       </div>

@@ -24,15 +24,24 @@ function FileTransferExample() {
     const workerInstance = new Worker();
     let disposed = false;
 
-    host.connect(workerInstance).then((conn) => {
-      if (disposed) {
-        conn.close();
-        return;
-      }
-      connectionRef.current = conn;
-      setConnection(conn);
-      setStatus("Worker ready—pick a file to transfer.");
-    });
+    host
+      .connect(workerInstance)
+      .then((conn) => {
+        if (disposed) {
+          conn.close();
+          return;
+        }
+        connectionRef.current = conn;
+        setConnection(conn);
+        setStatus("Worker ready - pick a file to transfer.");
+      })
+      .catch((error) => {
+        console.error("Error connecting to file transfer worker", error);
+        if (!disposed) {
+          setStatus("Could not connect to the worker.");
+        }
+        workerInstance.terminate();
+      });
 
     return () => {
       disposed = true;

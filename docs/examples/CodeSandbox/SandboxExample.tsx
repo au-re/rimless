@@ -9,19 +9,44 @@ function SandboxExample() {
 
   useEffect(() => {
     const api = {
-      doSomething: async ({ msg }) => {
+      doSomething: async ({ msg }: { msg: string }) => {
         await new Promise((resolve) => setTimeout(resolve, 1000));
         return `You sent me: ${msg}`;
       },
     };
     const worker = new Worker();
-    host.connect(worker, api).then(setConnection);
+    let activeConnection: Connection | null = null;
+    let disposed = false;
+
+    host
+      .connect(worker, api)
+      .then((nextConnection) => {
+        if (disposed) {
+          nextConnection.close();
+          return;
+        }
+
+        activeConnection = nextConnection;
+        setConnection(nextConnection);
+      })
+      .catch((error) => {
+        console.error("Error connecting to sandbox worker", error);
+        worker.terminate();
+      });
+
+    return () => {
+      disposed = true;
+      activeConnection?.close();
+      if (!activeConnection) {
+        worker.terminate();
+      }
+    };
   }, []);
 
   const onClick = async () => {
     if (!connection) return;
 
-    const messageRes = await connection?.remote.execute({
+    const messageRes = (await connection.remote.execute({
       code: `
         console.log("Running the sandbox...");
 
@@ -36,18 +61,18 @@ function SandboxExample() {
           return [...res, res3];
         }
 
-        main();
+        return main();
       `,
-    });
+    })) as { result: unknown; error: string | null };
 
-    setMessage(JSON.stringify(messageRes));
+    setMessage(JSON.stringify(messageRes.error ?? messageRes.result, null, 2));
   };
 
   return (
     <div>
       <div style={{ flex: 1 }}>
         <h1>HOST</h1>
-        <button type="button" onClick={onClick}>
+        <button type="button" onClick={onClick} disabled={!connection}>
           run code
         </button>
         <p>{message}</p>

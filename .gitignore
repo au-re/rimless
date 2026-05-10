@@ -39,3 +39,4 @@ storybook-static
 .pstdio
 .opencode
 .agents
+.playwright-mcp

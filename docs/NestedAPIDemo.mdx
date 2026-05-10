@@ -6,7 +6,7 @@ import NestedExample from "./examples/Nested/NestedExample";
 # Nested Methods
 
 Rimless supports nested method schemas. Remote APIs can expose deeply nested
-functions and you can access them using dot notation on the `remote` object.
+functions and you can access them with property chaining on `connection.remote`.
 
 For example, a worker may expose:
 
@@ -20,6 +20,6 @@ For example, a worker may expose:
 }
 ```
 
-You can call this from the host with `remote.user.profile.get()`.
+You can call this from the host with `connection.remote.user.profile.get()`.
 
 <NestedExample />

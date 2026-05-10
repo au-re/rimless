@@ -11,9 +11,32 @@ function WorkerExample() {
   useEffect(() => {
     const options = { initialValue: "initial value from host", getHostMessage: () => "Hello from host!" };
     const worker = new Worker();
-    host.connect(worker, options).then((_connection) => {
-      setConnection(_connection);
-    });
+    let activeConnection: Connection | null = null;
+    let disposed = false;
+
+    host
+      .connect(worker, options)
+      .then((nextConnection) => {
+        if (disposed) {
+          nextConnection.close();
+          return;
+        }
+
+        activeConnection = nextConnection;
+        setConnection(nextConnection);
+      })
+      .catch((error) => {
+        console.error("Error connecting to worker", error);
+        worker.terminate();
+      });
+
+    return () => {
+      disposed = true;
+      activeConnection?.close();
+      if (!activeConnection) {
+        worker.terminate();
+      }
+    };
   }, []);
 
   const onClick = async () => {
@@ -30,7 +53,7 @@ function WorkerExample() {
     <div style={{ background: color }}>
       <div style={{ flex: 1 }}>
         <h1>HOST</h1>
-        <button type="button" onClick={onClick}>
+        <button type="button" onClick={onClick} disabled={!connection}>
           call web worker function
         </button>
         <pre>{message}</pre>
