@@ -11,7 +11,7 @@ function SandboxExample() {
     const api = {
       doSomething: async ({ msg }) => {
         await new Promise((resolve) => setTimeout(resolve, 1000));
-        return "You sent me: " + msg;
+        return `You sent me: ${msg}`;
       },
     };
     const worker = new Worker();

@@ -62,7 +62,7 @@ export function registerLocalMethods(
         // Pass the remote object as the LAST argument to the local method
         payload.result = await method(...args, remote);
 
-        if (payload.result && payload.result[SYM_TRANSFERABLES]) {
+        if (payload.result?.[SYM_TRANSFERABLES]) {
           transferables = payload.result[SYM_TRANSFERABLES] ?? [];
           delete payload.result[SYM_TRANSFERABLES];
         }
