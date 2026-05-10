@@ -1,4 +1,5 @@
 import { guest } from "../../../src/index";
+import type { Schema } from "../../../src/types";
 
 function createColor() {
   const letters = "0123456789ABCDEF";
@@ -9,7 +10,7 @@ function createColor() {
   return color;
 }
 
-async function getMessage(remote) {
+async function getMessage(remote: Schema) {
   const hostMessage = await remote.getHostMessage();
   return `Hello from worker!
 Host message: ${hostMessage}

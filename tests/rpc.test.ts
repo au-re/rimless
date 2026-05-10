@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import * as helpers from "../src/helpers";
 import { registerRemoteMethods } from "../src/rpc";
 import { actions, events } from "../src/types";
-import * as helpers from "../src/helpers";
 
 // Helper variables for mocks
 let addEventListenerSpy: any;
@@ -48,7 +48,7 @@ describe("registerRemoteMethods", () => {
         connectionID: "conn",
       },
       event.origin,
-      []
+      [],
     );
 
     // Resolve first RPC
@@ -78,7 +78,7 @@ describe("registerRemoteMethods", () => {
         connectionID: "conn",
       },
       event.origin,
-      []
+      [],
     );
 
     const handlerBar = addEventListenerSpy.mock.calls[1][2];

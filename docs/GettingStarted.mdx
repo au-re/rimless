@@ -1,17 +1,18 @@
 import { Meta } from "@storybook/addon-docs/blocks";
 import IframesExample from "./examples/Iframes/IframesExample";
+import SandboxExample from "./examples/CodeSandbox/SandboxExample";
 import WorkerExample from "./examples/Workers/WorkerExample";
 
 <Meta title="Getting Started" />
 
 # Rimless
 
-Rimless makes event based communication easy with a promise-based API wrapping [postMessage](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage).
+Rimless makes event-based communication easy with a promise-based API wrapping [postMessage](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage).
 
-Rimless works with both **iframes** and **webworkers**.
+Rimless works with **iframes**, **web workers**, and **Node.js worker threads**.
 
-You can use `Rimless` to call remote procedures, exchange data or expose local functions
-with **iframes**/**webworkers**.
+You can use `rimless` to call remote procedures, exchange data, or expose local functions across those contexts.
+The browser-based examples below cover iframe and web worker integrations.
 
 ## RPCs on Iframes
 
@@ -20,6 +21,12 @@ versa.
 
 <IframesExample />
 
-## RPCs on Web webworkers
+## RPCs on Web Workers
 
 <WorkerExample />
+
+## Worker Code Runner RPCs
+
+This example shows a worker exposing an `execute` RPC while the code running inside that worker calls a host RPC through the same connection.
+
+<SandboxExample />

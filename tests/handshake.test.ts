@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { EventEmitter } from "node:events";
 import type { MockInstance } from "vitest";
-import { host, guest } from "../src/index";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as helpers from "../src/helpers";
+import { guest, host } from "../src/index";
 import * as rpc from "../src/rpc";
 import { actions, events } from "../src/types";
-import { EventEmitter } from "events";
 
 class MockPort extends EventEmitter {
   partner?: MockPort;

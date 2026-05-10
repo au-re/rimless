@@ -1,10 +1,10 @@
-import path from "path";
+import path from "node:path";
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [dts({ insertTypesEntry: true, outDir: "lib" })],
+  plugins: [dts({ insertTypesEntry: true, outDir: "lib", include: ["src"] })],
   build: {
     lib: {
       entry: path.resolve(__dirname, "src/index.ts"),
@@ -22,6 +22,6 @@ export default defineConfig({
     emptyOutDir: true,
   },
   optimizeDeps: {
-    exclude: ['./docs/examples/iframe.html']
-  }
+    exclude: ["./docs/examples/iframe.html"],
+  },
 });

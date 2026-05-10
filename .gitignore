@@ -27,5 +27,16 @@ coverage
 *.sw?
 
 *storybook.log
+storybook-static
 
 *.tsbuildinfo
+
+# bun
+.bun
+
+# agents
+.claude
+.pstdio
+.opencode
+.agents
+.playwright-mcp

@@ -18,5 +18,5 @@
     "noFallthroughCasesInSwitch": true,
     "typeRoots": ["./lib/index.d.ts", "node_modules/@types"]
   },
-  "include": ["src", "docs/Page.stories.ts"]
+  "include": ["src", "docs/**/*.ts", "docs/**/*.tsx"]
 }

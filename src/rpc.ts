@@ -1,13 +1,13 @@
 import { addEventListener, generateId, getEventData, postMessageToTarget, removeEventListener, set } from "./helpers";
 import {
   actions,
-  Environment,
+  type Environment,
   events,
-  RimlessEvent,
-  RPCRequestPayload,
-  RPCResolvePayload,
-  Schema,
-  Target,
+  type RimlessEvent,
+  type RPCRequestPayload,
+  type RPCResolvePayload,
+  type Schema,
+  type Target,
 } from "./types";
 
 /** Private symbol to which we will assign transferable objects */
@@ -55,14 +55,14 @@ export function registerLocalMethods(
 
       // when a host function returns transferable results to the remote, the
       // transferables are assigned to a special symbol on each function's result
-      let transferables: Transferable[] | undefined = undefined;
+      let transferables: Transferable[] | undefined;
 
       // run function and return the results to the remote
       try {
         // Pass the remote object as the LAST argument to the local method
         payload.result = await method(...args, remote);
 
-        if (payload.result && payload.result[SYM_TRANSFERABLES]) {
+        if (payload.result?.[SYM_TRANSFERABLES]) {
           transferables = payload.result[SYM_TRANSFERABLES] ?? [];
           delete payload.result[SYM_TRANSFERABLES];
         }

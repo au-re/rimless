@@ -1,6 +1,6 @@
 import React from "react";
 
-import { host, Connection, withTransferable } from "../../../src/index";
+import { type Connection, host, withTransferable } from "../../../src/index";
 import Worker from "./worker?worker";
 
 function FileTransferExample() {
@@ -24,15 +24,24 @@ function FileTransferExample() {
     const workerInstance = new Worker();
     let disposed = false;
 
-    host.connect(workerInstance).then((conn) => {
-      if (disposed) {
-        conn.close();
-        return;
-      }
-      connectionRef.current = conn;
-      setConnection(conn);
-      setStatus("Worker ready—pick a file to transfer.");
-    });
+    host
+      .connect(workerInstance)
+      .then((conn) => {
+        if (disposed) {
+          conn.close();
+          return;
+        }
+        connectionRef.current = conn;
+        setConnection(conn);
+        setStatus("Worker ready - pick a file to transfer.");
+      })
+      .catch((error) => {
+        console.error("Error connecting to file transfer worker", error);
+        if (!disposed) {
+          setStatus("Could not connect to the worker.");
+        }
+        workerInstance.terminate();
+      });
 
     return () => {
       disposed = true;
@@ -76,8 +85,8 @@ function FileTransferExample() {
     <div>
       <h1>Transfer Files with Transferables</h1>
       <p>
-        This example uses <code>withTransferable</code> to move the file&apos;s underlying ArrayBuffer between the
-        host and worker without cloning the data.
+        This example uses <code>withTransferable</code> to move the file&apos;s underlying ArrayBuffer between the host
+        and worker without cloning the data.
       </p>
       <label style={{ display: "inline-block", marginBottom: 12 }}>
         Choose a file:

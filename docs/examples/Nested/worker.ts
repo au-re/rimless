@@ -10,18 +10,8 @@ const api = {
   },
 };
 
-async function getHostMessageExample(remote: any) {
-  const msg = await remote.getHostMessage();
-  return `Worker received: ${msg}`;
-}
-
 const run = async () => {
-  await guest.connect(
-    { ...api, getHostMessageExample },
-    {
-      onConnectionSetup: async () => {},
-    },
-  );
+  await guest.connect(api);
 };
 
 run();

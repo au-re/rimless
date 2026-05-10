@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 
-import { host, Connection } from "../../../src/index";
+import { type Connection, host } from "../../../src/index";
 import Worker from "./worker?worker";
 
 function NestedExample() {
@@ -8,9 +8,33 @@ function NestedExample() {
   const [connection, setConnection] = React.useState<Connection | null>(null);
 
   useEffect(() => {
-    const options = { getHostMessage: () => "Hello from host" };
     const worker = new Worker();
-    host.connect(worker, options).then(setConnection);
+    let activeConnection: Connection | null = null;
+    let disposed = false;
+
+    host
+      .connect(worker)
+      .then((nextConnection) => {
+        if (disposed) {
+          nextConnection.close();
+          return;
+        }
+
+        activeConnection = nextConnection;
+        setConnection(nextConnection);
+      })
+      .catch((error) => {
+        console.error("Error connecting to nested API worker", error);
+        worker.terminate();
+      });
+
+    return () => {
+      disposed = true;
+      activeConnection?.close();
+      if (!activeConnection) {
+        worker.terminate();
+      }
+    };
   }, []);
 
   const fetchProfile = async () => {
@@ -23,7 +47,7 @@ function NestedExample() {
   return (
     <div>
       <h1>Nested API Demo</h1>
-      <button type="button" onClick={fetchProfile}>
+      <button type="button" onClick={fetchProfile} disabled={!connection}>
         load profile
       </button>
       {profile && <pre>{JSON.stringify(profile)}</pre>}

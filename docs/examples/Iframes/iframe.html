@@ -53,36 +53,7 @@
     <button id="btn">call host function</button>
   </div>
 
-  <script type="module">
-    import { guest } from "/src/index.ts";
-
-    function makeRandomColor() {
-      const letters = "0123456789ABCDEF";
-      let color = "#";
-      for (let i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)];
-      }
-      return color;
-    }
-
-    async function connect() {
-      const connection = await guest.connect({
-        helloFrom: "iframe:" + makeRandomColor(),
-        makeRandomColor,
-        setColor: (color) => {
-          document.body.style.background = color;
-        }
-      });
-
-      document.getElementById("connection").className += " connected"
-
-      document.getElementById("btn").onclick = async function () {
-        connection.remote.setColor(makeRandomColor());
-      }
-    }
-
-    connect();
-  </script>
+  <script type="module" src="__IFRAME_GUEST_SCRIPT_URL__"></script>
 </body>
 
 </html>

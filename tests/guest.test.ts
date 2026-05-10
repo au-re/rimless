@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { MockInstance } from "vitest";
-import { guest } from "../src/index";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as helpers from "../src/helpers";
+import { guest } from "../src/index";
 import * as rpc from "../src/rpc";
 import { actions, events } from "../src/types";
 
@@ -109,8 +109,8 @@ describe("guest.connect", () => {
     );
 
     expect(registerLocalMethodsSpy).toHaveBeenCalledTimes(1);
-    const [localMethods, connectionID, localListenTarget, sendTarget, remoteArg] =
-      registerLocalMethodsSpy.mock.calls[0] as Parameters<typeof rpc.registerLocalMethods>;
+    const [localMethods, connectionID, localListenTarget, sendTarget, remoteArg] = registerLocalMethodsSpy.mock
+      .calls[0] as Parameters<typeof rpc.registerLocalMethods>;
     const methodKeys = Object.keys(localMethods ?? {}).sort();
     expect(methodKeys).toEqual(["math.multiply", "ping"]);
     expect(connectionID).toBe(handshakeData.connectionID);

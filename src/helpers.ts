@@ -1,4 +1,4 @@
-import { Guest, NodeWorker, Target, WorkerLike } from "./types";
+import type { Guest, NodeWorker, Target, WorkerLike } from "./types";
 
 type RuntimeEnvironment = "browser" | "worker" | "node" | "bun";
 
@@ -189,9 +189,9 @@ let parentPort: any = null;
 
 if (initialRuntime === "node" || initialRuntime === "bun") {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const workerThreads = require("worker_threads");
-    parentPort = workerThreads.parentPort;
+    const nodeRequire = (globalThis as { require?: (id: string) => any }).require;
+    const workerThreads = nodeRequire?.("node:worker_threads");
+    parentPort = workerThreads?.parentPort ?? null;
   } catch (e) {
     // Not in worker thread context
   }
