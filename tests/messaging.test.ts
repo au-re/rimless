@@ -35,7 +35,6 @@ describe("isIframe", () => {
 describe("isNodeWorker and isWorkerLike", () => {
   afterEach(() => {
     vi.resetModules();
-    vi.unmock("worker_threads");
   });
 
   it("detects Web Worker instances", async () => {

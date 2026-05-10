@@ -1,4 +1,4 @@
-import type { MockInstance } from "vitest";
+import type { Mock, MockInstance } from "vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as helpers from "../src/helpers";
 import { guest } from "../src/index";
@@ -13,8 +13,8 @@ describe("guest.connect", () => {
   let registerRemoteMethodsSpy: MockInstance<typeof rpc.registerRemoteMethods>;
   let registerLocalMethodsSpy: MockInstance<typeof rpc.registerLocalMethods>;
 
-  let unregisterRemoteMock: ReturnType<typeof vi.fn>;
-  let unregisterLocalMock: ReturnType<typeof vi.fn>;
+  let unregisterRemoteMock: Mock<() => void>;
+  let unregisterLocalMock: Mock<() => void>;
   let remoteAPI: Record<string, any>;
   let mockTarget: Record<string, unknown>;
   let messageHandler: ((event: unknown) => Promise<void> | void) | undefined;
@@ -24,8 +24,8 @@ describe("guest.connect", () => {
     originalSelf = globalThis.self;
     mockTarget = { id: "target-host" };
     remoteAPI = { notify: vi.fn() };
-    unregisterRemoteMock = vi.fn();
-    unregisterLocalMock = vi.fn();
+    unregisterRemoteMock = vi.fn<() => void>();
+    unregisterLocalMock = vi.fn<() => void>();
 
     addEventListenerSpy = vi.spyOn(helpers, "addEventListener").mockImplementation((_target, _eventName, handler) => {
       if (typeof handler === "function") {
