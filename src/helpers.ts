@@ -138,6 +138,11 @@ export function getOriginFromURL(url: string | null) {
   return `${protocol}//${hostname}${portSuffix}`;
 }
 
+export function resolveTargetOrigin(origin?: string | null) {
+  if (!origin || origin === "null") return "*";
+  return origin;
+}
+
 export function get(obj: any, path: string | Array<string | number>, defaultValue?: any): any {
   const keys = Array.isArray(path) ? path : path.split(".").filter(Boolean);
   let result = obj;
@@ -227,7 +232,7 @@ export function getTargetHost(): any {
 export function postMessageToTarget(
   target: Target,
   message: any,
-  origin?: string,
+  origin?: string | null,
   transferables?: Transferable[],
 ): void {
   if (!target) {
@@ -248,7 +253,7 @@ export function postMessageToTarget(
 
   // iframe or window
   if (target.postMessage) {
-    target.postMessage(message, { targetOrigin: origin || "*", transfer: transferables });
+    target.postMessage(message, { targetOrigin: resolveTargetOrigin(origin), transfer: transferables });
     return;
   }
 

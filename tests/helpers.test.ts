@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   extractMethods,
   getOriginFromURL,
@@ -7,6 +7,8 @@ import {
   isNodeEnv,
   isServerEnv,
   isWorker,
+  postMessageToTarget,
+  resolveTargetOrigin,
   set,
 } from "../src/helpers";
 
@@ -305,6 +307,49 @@ describe("getOriginFromURL", () => {
   it("handles URLs with default ports", () => {
     expect(getOriginFromURL("http://example.com:80/path")).toBe("http://example.com");
     expect(getOriginFromURL("https://example.com:443/path")).toBe("https://example.com");
+  });
+});
+
+describe("resolveTargetOrigin", () => {
+  it("falls back to wildcard target origin when origin is missing or opaque", () => {
+    expect(resolveTargetOrigin(undefined)).toBe("*");
+    expect(resolveTargetOrigin(null)).toBe("*");
+    expect(resolveTargetOrigin("")).toBe("*");
+    expect(resolveTargetOrigin("null")).toBe("*");
+  });
+
+  it("preserves concrete origins", () => {
+    expect(resolveTargetOrigin("https://example.com")).toBe("https://example.com");
+  });
+});
+
+describe("postMessageToTarget", () => {
+  it("uses wildcard target origin for opaque origins", () => {
+    const target = { postMessage: vi.fn() };
+    const message = { ok: true };
+
+    postMessageToTarget(target as unknown as Window, message, "null");
+
+    expect(target.postMessage).toHaveBeenCalledWith(
+      message,
+      expect.objectContaining({
+        targetOrigin: "*",
+      }),
+    );
+  });
+
+  it("uses concrete target origins when available", () => {
+    const target = { postMessage: vi.fn() };
+    const message = { ok: true };
+
+    postMessageToTarget(target as unknown as Window, message, "https://example.com");
+
+    expect(target.postMessage).toHaveBeenCalledWith(
+      message,
+      expect.objectContaining({
+        targetOrigin: "https://example.com",
+      }),
+    );
   });
 });
 

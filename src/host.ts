@@ -29,6 +29,13 @@ function isValidTarget(guest: Guest, event: any) {
     const childOrigin = getOriginFromURL(childURL);
     const hasProperOrigin = event.origin === childOrigin;
     const hasProperSource = event.source === iframe.contentWindow;
+    const hasOpaqueOrigin = event.origin === "null";
+    const isSandboxedOpaqueIframe =
+      hasOpaqueOrigin && iframe.hasAttribute("sandbox") && !iframe.sandbox.contains("allow-same-origin");
+
+    if (isSandboxedOpaqueIframe) {
+      return hasProperSource;
+    }
 
     // For inline iframes (srcdoc/about:blank) we can only rely on source matching
     if (hasInlineContent || childURL === "about:blank") {
