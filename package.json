@@ -20,6 +20,7 @@
     "format:check": "biome check .",
     "lint": "biome lint .",
     "test": "vitest run",
+    "test:browser": "npm run build && node tests/browser/opaque-origin-iframe.mjs",
     "test:coverage": "vitest run --coverage",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
