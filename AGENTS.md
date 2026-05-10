@@ -5,7 +5,7 @@
 - Docs and runnable examples live in `docs/` and are served through Storybook.
 - Tests currently live in `tests/` and run with Vitest using `happy-dom`.
 - Build output is generated into `lib/`. Do not edit generated `lib/` files directly.
-- Use `npm` for project commands. `package-lock.json` is committed and CI uses `npm ci`.
+- Use `bun` for project commands. `bun.lock` is committed and CI uses `bun install --frozen-lockfile`.
 - Do not introduce another package manager unless the task is an explicit package-manager migration.
 
 # Required Workflow
@@ -25,27 +25,27 @@ Bug fixes must reproduce the issue before fixing it and must add or update a reg
 For code changes, run the focused test first, then the full validation set before finishing:
 
 ```sh
-npm test
-npm run lint
-npm run build
+bun run test
+bun run lint
+bun run build
 ```
 
 If dependencies are missing in a fresh checkout, run:
 
 ```sh
-npm ci
+bun install --frozen-lockfile
 ```
 
 Documentation-only changes do not require the full validation set.
 
 # Common Commands
 
-- `npm test` - run all Vitest tests.
-- `npm run test:coverage` - run tests with coverage thresholds.
-- `npm run lint` - run ESLint.
-- `npm run build` - typecheck source and tests, then build the library with Vite.
-- `npm run storybook` - start Storybook for docs/examples.
-- `npm run build-storybook` - build Storybook.
+- `bun run test` - run all Vitest tests.
+- `bun run test:coverage` - run tests with coverage thresholds.
+- `bun run lint` - run ESLint.
+- `bun run build` - typecheck source and tests, then build the library with Vite.
+- `bun run storybook` - start Storybook for docs/examples.
+- `bun run build-storybook` - build Storybook.
 
 # Coding Rules
 
@@ -78,8 +78,8 @@ Documentation-only changes do not require the full validation set.
 
 # Generated And Packaged Artifacts
 
-- Do not edit `lib/` directly. Update `src/`, then run `npm run build`.
-- If dependencies change, update `package-lock.json` through npm commands rather than manual edits.
+- Do not edit `lib/` directly. Update `src/`, then run `bun run build`.
+- If dependencies change, update `bun.lock` through Bun commands rather than manual edits.
 - Do not manually edit `package.json` versions as part of routine code changes.
 
 # Git
