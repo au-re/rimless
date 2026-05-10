@@ -1,8 +1,7 @@
 import React, { useEffect } from "react";
-import template from "./iframe.html?raw";
-
 import { host } from "../../../src/index";
-import { Connection } from "../../../src/types";
+import type { Connection } from "../../../src/types";
+import template from "./iframe.html?raw";
 
 function makeRandomColor() {
   const letters = "0123456789ABCDEF";

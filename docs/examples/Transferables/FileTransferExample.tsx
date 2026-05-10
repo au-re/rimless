@@ -1,6 +1,6 @@
 import React from "react";
 
-import { host, Connection, withTransferable } from "../../../src/index";
+import { type Connection, host, withTransferable } from "../../../src/index";
 import Worker from "./worker?worker";
 
 function FileTransferExample() {
@@ -76,8 +76,8 @@ function FileTransferExample() {
     <div>
       <h1>Transfer Files with Transferables</h1>
       <p>
-        This example uses <code>withTransferable</code> to move the file&apos;s underlying ArrayBuffer between the
-        host and worker without cloning the data.
+        This example uses <code>withTransferable</code> to move the file&apos;s underlying ArrayBuffer between the host
+        and worker without cloning the data.
       </p>
       <label style={{ display: "inline-block", marginBottom: 12 }}>
         Choose a file:

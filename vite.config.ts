@@ -1,4 +1,4 @@
-import path from "path";
+import path from "node:path";
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
 
@@ -22,6 +22,6 @@ export default defineConfig({
     emptyOutDir: true,
   },
   optimizeDeps: {
-    exclude: ['./docs/examples/iframe.html']
-  }
+    exclude: ["./docs/examples/iframe.html"],
+  },
 });

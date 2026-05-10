@@ -4,14 +4,14 @@ import {
   generateId,
   getEventData,
   getOriginFromURL,
-  isServerEnv,
   isNodeWorker,
+  isServerEnv,
   isWorkerLike,
   postMessageToTarget,
   removeEventListener,
 } from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
-import { actions, events, Guest, Connection, Connections, Schema } from "./types";
+import { actions, type Connection, type Connections, events, type Guest, type Schema } from "./types";
 
 const connections: Connections = {};
 

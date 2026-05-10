@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 
-import { host, Connection } from "../../../src/index";
+import { type Connection, host } from "../../../src/index";
 import Worker from "./worker?worker";
 
 function WorkerExample() {

@@ -1,13 +1,13 @@
 import {
+  addEventListener,
   extractMethods,
   getEventData,
   getTargetHost,
   postMessageToTarget,
-  addEventListener,
   removeEventListener,
 } from "./helpers";
 import { registerLocalMethods, registerRemoteMethods } from "./rpc";
-import { actions, EventHandlers, events, Connection, Schema } from "./types";
+import { actions, type Connection, type EventHandlers, events, type Schema } from "./types";
 
 function connect(schema: Schema = {}, eventHandlers?: EventHandlers): Promise<Connection> {
   return new Promise(async (resolve) => {

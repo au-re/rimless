@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 // Utility to load helpers fresh for each test when needed
 async function loadHelpers() {
@@ -66,4 +66,3 @@ describe("generateId", () => {
     expect(helpers.generateId()).not.toBe(helpers.generateId());
   });
 });
-

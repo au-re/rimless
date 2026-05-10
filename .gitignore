@@ -29,3 +29,12 @@ coverage
 *storybook.log
 
 *.tsbuildinfo
+
+# bun
+.bun
+
+# agents
+.claude
+.pstdio
+.opencode
+.agents

@@ -1,5 +1,14 @@
-import { describe, it, expect, afterEach } from "vitest";
-import { extractMethods, isBrowserEnv, isWorker, isNodeEnv, isBunEnv, isServerEnv, getOriginFromURL, set } from "../src/helpers";
+import { afterEach, describe, expect, it } from "vitest";
+import {
+  extractMethods,
+  getOriginFromURL,
+  isBrowserEnv,
+  isBunEnv,
+  isNodeEnv,
+  isServerEnv,
+  isWorker,
+  set,
+} from "../src/helpers";
 
 describe("extract functions", () => {
   const noFunctions = {
