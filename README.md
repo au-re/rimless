@@ -1,3 +1,5 @@
+
+
 [npm-url]: https://www.npmjs.com/package/rimless
 [npm-image]: https://badge.fury.io/js/rimless.svg
 [commitizen-url]: http://commitizen.github.io/cz-cli/
@@ -42,9 +44,9 @@ or from a CDN
 
 ## Example Usage
 
-Below is a minimal but complete round‑trip that shows how each side can:
+Below is a minimal but complete round‑trip that shows how each side can:
 
-1. expose variables and functions,
+1. expose variables and functions,
 2. read the other side’s variables,
 3. invoke the other side’s functions,
 4. finally close the link.
@@ -182,7 +184,7 @@ guest.connect().then((connection) => {
 
 ### Calling the remote from an RPC
 
-Every RPC handler you expose receives the caller’s method collection as its last parameter—conventionally named `remote`.
+Every RPC handler you expose receives the caller’s method collection as its last parameter—conventionally named `remote`.
 That means an RPC can immediately call back into the opposite context to acknowledge success, return extra data, or kick‑off a follow‑up action.
 
 **Why it’s useful**
@@ -297,9 +299,9 @@ host.connect(iframe, {
 });
 ```
 
-| Name     | Type                            | Description                          | Required |
-| -------- | ------------------------------- | ------------------------------------ | -------- |
-| `guest`  | `HTMLIFrameElement` or `Worker` | Target of the connection             | required |
+| Name     | Type                                      | Description                          | Required |
+| -------- | ----------------------------------------- | ------------------------------------ | -------- |
+| `guest`  | `HTMLIFrameElement` \| `Worker` \| `MessagePort` | Target of the connection             | required |
 | `schema` | `object`                        | schema of the api you want to expose | -        |
 
 > ### `guest.connect`
