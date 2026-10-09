@@ -267,10 +267,12 @@ function launchChrome(chromePath, debugPort, userDataDir, url) {
   return {
     process: browser,
     stderr: () => stderr,
+    // Chrome keeps writing its profile while it shuts down. Wait for it to exit before the profile is removed.
     close: () => {
-      if (!browser.killed) {
-        browser.kill();
-      }
+      if (browser.exitCode !== null || browser.signalCode !== null) return Promise.resolve();
+      const exited = new Promise((resolve) => browser.once("exit", resolve));
+      browser.kill();
+      return exited;
     },
   };
 }
@@ -331,7 +333,7 @@ try {
   }
 } finally {
   target?.close();
-  browser?.close();
+  await browser?.close();
   await rm(userDataDir, { recursive: true, force: true });
   await close(server);
 }
