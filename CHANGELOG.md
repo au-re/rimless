@@ -1,5 +1,11 @@
 # rimless
 
+## 0.8.3
+
+### Patch Changes
+
+- e448766: Remove an RPC call's response listener as soon as the call resolves or rejects. Previously the listener stayed registered until the connection closed, so a long-lived connection gained one `message` listener per call and kept every call's arguments in memory.
+
 ## 0.8.2
 
 ### Patch Changes
