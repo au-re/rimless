@@ -114,6 +114,74 @@ describe("handshake with rpc", () => {
     hostConn.close();
     guestConn.close();
   });
+
+  it("removes the response listener once an RPC call resolves", async () => {
+    const { port1, port2 } = setupPorts();
+    vi.spyOn(helpers, "getTargetHost").mockReturnValue(port1);
+    // @ts-expect-error - mock worker self
+    global.self = port1;
+
+    const hostPromise = host.connect(port2, {
+      add: (a: number, b: number) => a + b,
+    });
+    const guestConn = await guest.connect({});
+    const hostConn = await hostPromise;
+    const listenerCount = port1.listenerCount("message");
+
+    await guestConn.remote.add(1, 2);
+    await Promise.all([guestConn.remote.add(3, 4), guestConn.remote.add(5, 6)]);
+    const leakedListeners = port1.listenerCount("message") - listenerCount;
+
+    hostConn.close();
+    guestConn.close();
+
+    expect(leakedListeners).toBe(0);
+  });
+
+  it("removes the response listener once an RPC call rejects", async () => {
+    const { port1, port2 } = setupPorts();
+    vi.spyOn(helpers, "getTargetHost").mockReturnValue(port1);
+    // @ts-expect-error - mock worker self
+    global.self = port1;
+
+    const hostPromise = host.connect(port2, {
+      fail: () => {
+        throw new Error("nope");
+      },
+    });
+    const guestConn = await guest.connect({});
+    const hostConn = await hostPromise;
+    const listenerCount = port1.listenerCount("message");
+
+    await expect(guestConn.remote.fail()).rejects.toMatchObject({ message: "nope" });
+    const leakedListeners = port1.listenerCount("message") - listenerCount;
+
+    hostConn.close();
+    guestConn.close();
+
+    expect(leakedListeners).toBe(0);
+  });
+
+  it("removes the listeners of pending RPC calls when the connection closes", async () => {
+    const { port1, port2 } = setupPorts();
+    vi.spyOn(helpers, "getTargetHost").mockReturnValue(port1);
+    // @ts-expect-error - mock worker self
+    global.self = port1;
+
+    const hostPromise = host.connect(port2, {
+      wait: () => new Promise(() => {}),
+    });
+    const guestConn = await guest.connect({});
+    const hostConn = await hostPromise;
+
+    guestConn.remote.wait();
+    guestConn.remote.wait();
+    guestConn.remote.wait();
+    guestConn.close();
+    hostConn.close();
+
+    expect(port1.listenerCount("message")).toBe(0);
+  });
 });
 
 describe("handshake edge cases", () => {

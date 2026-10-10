@@ -98,13 +98,19 @@ export function createRPC(
   rpcCallName: string,
   rpcConnectionID: string,
   event: RimlessEvent,
-  listeners: Array<() => void> = [],
+  listeners: Set<() => void> = new Set(),
   listenTo: Environment,
   sendTo: Target,
 ) {
   return (...args: any[]) => {
     return new Promise((resolve, reject) => {
       const requestID = generateId();
+
+      // a settled call must release its listener, which otherwise keeps the call and its arguments alive
+      function unregister() {
+        removeEventListener(listenTo, events.MESSAGE, handleResponse);
+        listeners.delete(unregister);
+      }
 
       // on RPC response
       function handleResponse(event: any) {
@@ -117,8 +123,14 @@ export function createRPC(
         if (connectionID !== rpcConnectionID) return;
 
         // resolve the response
-        if (action === actions.RPC_RESOLVE) return resolve(result);
-        if (action === actions.RPC_REJECT) return reject(error);
+        if (action === actions.RPC_RESOLVE) {
+          unregister();
+          return resolve(result);
+        }
+        if (action === actions.RPC_REJECT) {
+          unregister();
+          return reject(error);
+        }
       }
 
       // send the RPC request with arguments
@@ -139,7 +151,7 @@ export function createRPC(
       );
 
       addEventListener(listenTo, events.MESSAGE, handleResponse);
-      listeners.push(() => removeEventListener(listenTo, events.MESSAGE, handleResponse));
+      listeners.add(unregister);
 
       postMessageToTarget(sendTo, payload, event?.origin, transferables);
     });
@@ -165,7 +177,7 @@ export function registerRemoteMethods(
   sendTo: Target,
 ) {
   const remote = { ...schema };
-  const listeners: Array<() => void> = [];
+  const listeners = new Set<() => void>();
 
   for (const methodName of methodNames) {
     const rpc = createRPC(methodName, connectionID, event, listeners, listenTo, sendTo);
