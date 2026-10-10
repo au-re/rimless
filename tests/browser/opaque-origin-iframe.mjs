@@ -176,6 +176,19 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// Runs `check` every 100 ms until it returns a value or `timeoutMs` passes.
+async function poll(check, timeoutMs, timeoutMessage) {
+  const deadline = Date.now() + timeoutMs;
+  const attempt = async () => {
+    const value = await check();
+    if (value !== undefined) return value;
+    if (Date.now() >= deadline) throw new Error(timeoutMessage());
+    await delay(100);
+    return attempt();
+  };
+  return attempt();
+}
+
 async function getOpenPort() {
   const server = createServer();
   const port = await listen(server);
@@ -183,24 +196,21 @@ async function getOpenPort() {
   return port;
 }
 
-async function waitForDebugTarget(debugPort, url) {
-  for (let attempt = 0; attempt < 100; attempt++) {
-    try {
-      const response = await fetch(`http://127.0.0.1:${debugPort}/json/list`);
-      const targets = await response.json();
-      const target = targets.find((entry) => entry.type === "page" && entry.url === url);
-
-      if (target?.webSocketDebuggerUrl) {
-        return target;
+function waitForDebugTarget(debugPort, url) {
+  return poll(
+    async () => {
+      try {
+        const response = await fetch(`http://127.0.0.1:${debugPort}/json/list`);
+        const targets = await response.json();
+        return targets.find((entry) => entry.type === "page" && entry.url === url && entry.webSocketDebuggerUrl);
+      } catch (_error) {
+        // Chrome may need a moment to open the debugging endpoint.
       }
-    } catch (_error) {
-      // Chrome may need a moment to open the debugging endpoint.
-    }
-
-    await delay(100);
-  }
-
-  throw new Error("Timed out waiting for Chrome debugging target");
+      return undefined;
+    },
+    10000,
+    () => "Timed out waiting for Chrome debugging target",
+  );
 }
 
 function connectToTarget(webSocketDebuggerUrl) {
@@ -303,34 +313,30 @@ try {
 
   await target.send("Runtime.enable");
 
-  const startedAt = Date.now();
   let pageState = {};
 
-  while (Date.now() - startedAt < 12000) {
-    const evaluation = await target.send("Runtime.evaluate", {
-      expression:
-        "({ result: document.body.dataset.result || '', status: document.body.dataset.status || '', text: document.body.textContent || '' })",
-      returnByValue: true,
-    });
+  await poll(
+    async () => {
+      const evaluation = await target.send("Runtime.evaluate", {
+        expression:
+          "({ result: document.body.dataset.result || '', status: document.body.dataset.status || '', text: document.body.textContent || '' })",
+        returnByValue: true,
+      });
 
-    pageState = evaluation.result.value;
+      pageState = evaluation.result.value;
 
-    if (pageState.result === "pass") {
-      console.log("Opaque-origin iframe browser integration passed in Chrome/Chromium.");
-      process.exitCode = 0;
-      break;
-    }
+      if (pageState.result === "fail") {
+        throw new Error(pageState.text);
+      }
 
-    if (pageState.result === "fail") {
-      throw new Error(pageState.text);
-    }
+      return pageState.result === "pass" ? pageState : undefined;
+    },
+    12000,
+    () => `Timed out waiting for browser test result: ${pageState.status || "no status"}`,
+  );
 
-    await delay(100);
-  }
-
-  if (pageState.result !== "pass") {
-    throw new Error(`Timed out waiting for browser test result: ${pageState.status || "no status"}`);
-  }
+  console.log("Opaque-origin iframe browser integration passed in Chrome/Chromium.");
+  process.exitCode = 0;
 } finally {
   target?.close();
   await browser?.close();
